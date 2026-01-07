@@ -32,7 +32,10 @@
 Using the training and test sets specified in the syllabus, perform the following tasks:
 \begin{enumerate}
     \item On the Gisette dataset, train decision trees of maximum depth 1,2,\(\cdots\) up to 12, for a total of 12 
-    decision trees.  If your package does not allow the max depth as a parameter, train trees with 
+    decision trees.  If your package does not allow the max depth as a parameter, train trees with \(2^1, 2^2,\cdots,2^{12}\)
+    nodes, again a total of 12 trees.  Use the trained trees to predict the class labels on the training and test sets
+    and obtain the training and test misclassification errors.  Plot on the same graph the training and test 
+    misclassification errors vs tree depth (or log2 of nodes) as two seperate curves.  
     \item Repeat point 1.) on the satimage, madelon, hill-valley, and covtype datasets.
     \item On the Gisette dataset, for each off \(k \in \{3,10,30,100,300\}\) train a random forest with \(k\) trees where
     the split attribute at each node is chosen from a random subset of \(71\approx\sqrt{5000}\) features.  Use the trained
