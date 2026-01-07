@@ -14,9 +14,8 @@
 
 
 %title info
-\newcommand{\doctitle}{STA 6468 Final Project}
+\newcommand{\doctitle}{STA 5635 HW 1}
 \newcommand{\name}{Palmer Swanson}
-\newcommand{\todaydate}{Jan. 1, 20XX}
 
 \pagestyle{fancy}
 \lhead{\textbf{\doctitle}}
@@ -27,19 +26,22 @@
 \begin{document}
 
 
-\begin{center}
-\Large
-\bfseries
-\doctitle
-\end{center}
-
 
 
 \section*{Problem 1}
 Using the training and test sets specified in the syllabus, perform the following tasks:
-
-\subsection*{a}
-On the Gisette dataset, train decision trees of maximum depth
+\begin{enumerate}
+    \item On the Gisette dataset, train decision trees of maximum depth 1,2,\(\cdots\) up to 12, for a total of 12 
+    decision trees.  If your package does not allow the max depth as a parameter, train trees with 
+    \item Repeat point 1.) on the satimage, madelon, hill-valley, and covtype datasets.
+    \item On the Gisette dataset, for each off \(k \in \{3,10,30,100,300\}\) train a random forest with \(k\) trees where
+    the split attribute at each node is chosen from a random subset of \(71\approx\sqrt{5000}\) features.  Use the trained
+    trrees to predict the class labels on the training and test sets and obtain 
+    \item Repeat point 3.) on the satimage, madelon, and hill-valley datasets.
+    \item Repeat point 3.) on the Gisette dataset where the split attribute at each node is chosen from a 
+    random subset of \(12\approx \log_2(5000)\) features, and where the split attribute at each node is chosen
+    from all 5000 features, plotting all four curves (2 train and 2 test misclassification errors) on the same graph.
+\end{enumerate}
 
 
 \end{document}
