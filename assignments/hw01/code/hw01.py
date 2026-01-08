@@ -256,7 +256,7 @@ plt.grid(True, alpha=0.3)
 #plt.show()
 
 #save this image into the figures folder
-plt.savefig("assignments/hw01/figures/madelon_misclassification_p2.png", dpi=400, bbox_inches="tight")
+plt.savefig("assignments/hw01/figures/hill_valley_misclassification_p2.png", dpi=400, bbox_inches="tight")
 plt.close()
 
 #need to create a dataframe for table:
@@ -272,8 +272,8 @@ lowest_error = results_q1[results_q1['Validation Misclassification'] == results_
 #save for latex.  Discovered you can use the .to_latex command. 
 LATEX_table = lowest_error.to_latex(
     index=False,
-    caption="Lowest misclassification error: madelon Dataset",
-    label="tab:tree_misclass_error_p2_madelon",
+    caption="Lowest misclassification error: hv Dataset",
+    label="tab:tree_misclass_error_p2_hv",
     column_format="ccc"
 )
 
