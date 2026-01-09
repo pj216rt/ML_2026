@@ -2,6 +2,7 @@ import pandas as pd
 import numpy as np
 from sklearn import tree
 from sklearn.metrics import accuracy_score
+from sklearn.ensemble import RandomForestClassifier
 import matplotlib.pyplot as plt
 
 #problem 1
@@ -282,7 +283,31 @@ print(LATEX_table)
 
 #covtype dataset
 #still need to work on this
+train_data = pd.read_csv("assignments/hw01/data/covtype.data", header=None)
+
+covtype_train = train_data.iloc[:11340]
+#covtype_valid = train_data.iloc[:3780]
+covtype_test = train_data.iloc[(11340+3780):]
+
 
 
 #Problem 3.  Random Forrests
+train_data = pd.read_csv("assignments/hw01/data/gisette_train.data", delim_whitespace=True, header=None)
+train_labels = pd.read_csv("assignments/hw01/data/gisette_train.labels", header=None)
+
+validate_data = pd.read_csv("assignments/hw01/data/gisette_valid.data", delim_whitespace=True, header=None)
+validate_labels = pd.read_csv("assignments/hw01/data/gisette_valid.labels", header=None)
+
+#getting k values
 k_values = [3, 10, 30, 100, 300]
+train_errors = []
+test_errors = []
+
+for k in k_values:
+    rand_forest = RandomForestClassifier(n_estimators=k, max_features=71)
+
+    #fitting
+    rand_forest = rand_forest.fit(train_data, train_labels)
+
+    #making predictions
+    
