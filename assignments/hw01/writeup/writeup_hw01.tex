@@ -148,7 +148,8 @@
 
     \item Repeat point 3.) on the satimage, madelon, and hill-valley datasets.
     
-    The images showing the training and test misclassification errors are displayed in figure \ref{fig:stacked_images}.
+    The images showing the training and test misclassification errors are displayed in figure \ref{fig:stacked_images}
+    and we can create a table for this, shown in table \ref{tab:rf_misclass_error_all}.
 
     \begin{figure}[h]
         \centering
@@ -174,6 +175,35 @@
         \caption{Plots Showing training and test misclassification errors vs number of trees.}
         \label{fig:stacked_images}
     \end{figure}
+
+    \begin{table}[h]
+        \centering
+        \begin{tabular}{lccc}
+            \toprule
+            Dataset & Num. Trees & Training Misclass. Err. & Validation Misclass. Err. \\
+            \midrule
+            Satimage & 3 & 0.027959 & 0.152000 \\
+            Satimage & 10 & 0.005637 & 0.114000 \\
+            Satimage & 30 & 0.000000 & 0.103500 \\
+            Satimage & 100 & 0.000000 & 0.101000 \\
+            Satimage & 300 & 0.000000 & 0.099500 \\
+            \midrule
+            Madelon & 3   & 0.063000 & 0.325000 \\
+            Madelon & 10  & 0.010500 & 0.271667 \\
+            Madelon & 30  & 0.000000 & 0.228333 \\
+            Madelon & 100 & 0.000000 & 0.181667 \\
+            Madelon & 300 & 0.000000 & 0.175000 \\
+            \midrule
+            Hill-Valley & 3   & 0.080858 & 0.483498 \\
+            Hill-Valley & 10  & 0.023102 & 0.460396 \\
+            Hill-Valley & 30  & 0.000000 & 0.466997 \\
+            Hill-Valley & 100 & 0.000000 & 0.453795 \\
+            Hill-Valley & 300 & 0.000000 & 0.443894 \\
+            \bottomrule
+        \end{tabular}
+        \caption{Misclassification errors for Random Forests across datasets}
+        \label{tab:rf_misclass_error_all}
+    \end{table}
 
     \item Repeat point 3.) on the Gisette dataset where the split attribute at each node is chosen from a 
     random subset of \(12\approx \log_2(5000)\) features, and where the split attribute at each node is chosen

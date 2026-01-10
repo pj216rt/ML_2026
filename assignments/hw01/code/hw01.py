@@ -208,7 +208,7 @@ for data in filtered_datasets:
     #need a latex table
     LATEX_table = results.to_latex(
     index=False,
-    caption=i["latex_caption_2"],
+    caption=data["latex_caption_2"],
     column_format="ccc"
     )
 
@@ -216,3 +216,14 @@ for data in filtered_datasets:
     print(LATEX_table)
 
 #part e
+#need two parts, one where each node is choen from a random subset of 12
+#and another where each node is chosen from all 5000 features.  
+#None means use all features
+node_amount = [12, None]
+
+results = []
+
+for features in node_amount:
+    for k in k_values:
+        #randomfor = RandomForestClassifier(n_estimators=k, max_features=features)
+        #randomfor = randomfor()
