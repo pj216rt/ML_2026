@@ -6,7 +6,6 @@ from sklearn.ensemble import RandomForestClassifier
 import matplotlib.pyplot as plt
 
 #need a double loop.  Outer loop over datasets, inner loop over depts
-
 depths = range(1, 13)
 
 #creating a dict to help loop over the datasets more
@@ -54,21 +53,33 @@ datasets = [
     {
         "name": "Covtype",
         "X_train": "assignments/hw01/data/covtype.data",
-        
+        "fig_out": "assignments/hw01/figures/Covtype_misclassification_error.png",
+        "latex_caption": "Lowest misclassification error: Covtype Dataset",
+        "latex_label": "tab:Covtype_tree_misclass_error"
     }
 ]
 
 
 for i in datasets:
-    #reading in dataset, if dataset is not covtype
-    X_train = pd.read_csv(i["X_train"], delim_whitespace=True, header=None)
-    X_valid = pd.read_csv(i["X_valid"], delim_whitespace=True, header=None)
+    #special case for the Covtype dataset.
+    if i["name"] == "Covtype":
+        data = pd.read_csv(i["X_train"], header=None).to_numpy()
+        
+        X = data[:, :-1]
+        y = data[:, -1]
 
-    y_train = pd.read_csv(i["y_train"], header=None)
-    y_valid = pd.read_csv(i["y_valid"], header=None)
+        X_train = X[:15120]
+        y_train = y[:15120]
 
+        X_valid = X[15120:]
+        y_valid = y[15120:]
+    else:
+        #reading in dataset, if dataset is not covtype
+        X_train = pd.read_csv(i["X_train"], delim_whitespace=True, header=None)
+        X_valid = pd.read_csv(i["X_valid"], delim_whitespace=True, header=None)
 
-    print(y_train.shape)
+        y_train = pd.read_csv(i["y_train"], header=None)
+        y_valid = pd.read_csv(i["y_valid"], header=None)
 
     #initialize empty arrays
     train_err = []
@@ -116,8 +127,8 @@ for i in datasets:
     #save as latex table:
     LATEX_table = lowest_error.to_latex(
     index=False,
-    caption="Lowest misclassification error, Gisette Dataset",
-    label="tab:tree_misclass_error_p1",
+    caption=i["latex_caption"],
+    label=i["latex_label"],
     column_format="ccc"
     )
 
