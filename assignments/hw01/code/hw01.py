@@ -9,6 +9,7 @@ import matplotlib.pyplot as plt
 depths = range(1, 13)
 
 #creating a dict to help loop over the datasets more
+#got tired of typing the same code for everything
 datasets = [
     {
         "name": "Gisette",
@@ -17,7 +18,9 @@ datasets = [
         "X_valid": "assignments/hw01/data/gisette_valid.data",
         "y_valid": "assignments/hw01/data/gisette_valid.labels",
         "fig_out": "assignments/hw01/figures/gisette_misclassification_error.png",
+        "fig_out_2": "assignments/hw01/figures/gisette_misclassification_error_2.png",
         "latex_caption": "Lowest misclassification error, Gisette Dataset",
+        "latex_caption_2": "Misclassification errors, Random Forests, Gisette Dataset",
         "latex_label": "tab:gissette_tree_misclass_error"
     },
     {
@@ -27,7 +30,9 @@ datasets = [
         "X_valid": "assignments/hw01/data/Xtest_sat.dat",
         "y_valid": "assignments/hw01/data/Ytest_sat.dat",
         "fig_out": "assignments/hw01/figures/satimage_misclassification_error.png",
+        "fig_out_2": "assignments/hw01/figures/satimage_misclassification_error_2.png",
         "latex_caption": "Lowest misclassification error: Satimage Dataset",
+        "latex_caption_2": "Misclassification errors, Random Forests, Satimage Dataset",
         "latex_label": "tab:Satimage_tree_misclass_error"
     },
     {
@@ -36,8 +41,10 @@ datasets = [
         "y_train": "assignments/hw01/data/madelon_train.labels",
         "X_valid": "assignments/hw01/data/madelon_valid.data",
         "y_valid": "assignments/hw01/data/madelon_valid.labels",
-         "fig_out": "assignments/hw01/figures/madelon_misclassification_error.png",
+        "fig_out": "assignments/hw01/figures/madelon_misclassification_error.png",
+        "fig_out_2": "assignments/hw01/figures/madelon_misclassification_error_2.png",
         "latex_caption": "Lowest misclassification error: Madelon Dataset",
+        "latex_caption_2": "Misclassification errors, Random Forests, Madelon Dataset",
         "latex_label": "tab:Madelon_tree_misclass_error"
     },
     {
@@ -47,7 +54,9 @@ datasets = [
         "X_valid": "assignments/hw01/data/Xtest_hv.dat",
         "y_valid": "assignments/hw01/data/Ytest_hv.dat",
         "fig_out": "assignments/hw01/figures/hill_valley_misclassification_error.png",
+        "fig_out_2": "assignments/hw01/figures/hill_valley_misclassification_error_2.png",
         "latex_caption": "Lowest misclassification error: Hill-Valley Dataset",
+        "latex_caption_2": "Misclassification errors, Random Forests, Hill-Valley Dataset",
         "latex_label": "tab:hill_valley_tree_misclass_error"
     },
     {
@@ -55,6 +64,7 @@ datasets = [
         "X_train": "assignments/hw01/data/covtype.data",
         "fig_out": "assignments/hw01/figures/Covtype_misclassification_error.png",
         "latex_caption": "Lowest misclassification error: Covtype Dataset",
+        "latex_caption_2": "Misclassification errors, Random Forests, Covtype Dataset",
         "latex_label": "tab:Covtype_tree_misclass_error"
     }
 ]
@@ -174,3 +184,35 @@ for data in filtered_datasets:
         #append to array
         train_errors.append(train_error)
         test_errors.append(valid_error)
+    
+    #need to plot this stuff now
+    plt.figure()
+    plt.plot(k_values, train_errors, marker='o', label='Training Error')
+    plt.plot(k_values, test_errors, marker='o', label='Test Error')
+
+    plt.xlabel("Number of Trees (k)")
+    plt.ylabel("Misclassification Error")
+    plt.title(f"Random Forest Training and Test Misclassification Rates, {data['name']} Dataset")
+    plt.legend()
+    plt.grid(True)
+    plt.savefig(data["fig_out_2"], dpi=400, bbox_inches="tight")
+    plt.close()
+
+    #table of errors
+    results = pd.DataFrame({
+    "Number of Trees": k_values,
+    "Training Misclassification Error": train_errors,
+    "Validation Misclassification Error": test_errors
+    })
+
+    #need a latex table
+    LATEX_table = results.to_latex(
+    index=False,
+    caption=i["latex_caption_2"],
+    column_format="ccc"
+    )
+
+    #print
+    print(LATEX_table)
+
+#part e

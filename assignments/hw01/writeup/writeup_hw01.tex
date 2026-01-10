@@ -5,6 +5,7 @@
 \usepackage[margin=1in]{geometry}
 \usepackage[utf8]{inputenc}
 \usepackage{listings}
+\usepackage{booktabs}
 \usepackage{enumitem}
 \usepackage{pdfpages}
 \usepackage{graphicx}
@@ -25,9 +26,6 @@
 %document
 \begin{document}
 
-
-
-
 \section*{Problem 1}
 \begin{enumerate}
     \item On the Gisette dataset, train decision trees of maximum depth 1,2,\(\cdots\) up to 12, for a total of 12 
@@ -36,15 +34,31 @@
     misclassification errors vs tree depth as two seperate curves.  Report in a table the minimum
     test error and the tree depth for which the minimum was attained.
 
-    We do this in Python, and obtain the following plot of the training and test misclassification errors vs tree 
-    depth:
+    We do this in Python, and obtain a plot of the training and test misclassification errors vs tree 
+    depth in figure \ref{fig:table1}:
 
     \begin{figure}[h]
         \centering
-        \includegraphics[totalheight=8cm]{../figures/gisette_misclassification_error.png}
+        \includegraphics[totalheight=7cm]{../figures/gisette_misclassification_error.png}
         \caption{Misclassification Error vs Tree Depth, Training and Validation: Gisette dataset}
-        \label{fig:verticalcell}
+        \label{fig:table1}
     \end{figure}
+
+    The table freporting the minimum test error and the tree depth for which the minium was attained
+    are displayed in table \ref{tab:gissette_tree_misclass_error}.
+
+    \begin{table}[h]
+        \centering
+        \begin{tabular}{ccc}
+            \toprule
+            Depth & Training Misclassification & Validation Misclassification \\
+            \midrule
+            9 & 0.017500 & 0.061000 \\
+            \bottomrule
+        \end{tabular}
+        \caption{Lowest misclassification error, Gisette Dataset}
+        \label{tab:gissette_tree_misclass_error}
+    \end{table}
 
     \item Repeat point 1.) on the satimage, madelon, hill-valley, and covtype datasets.
     
@@ -77,13 +91,90 @@
         \caption{Training and Validation datasets misclassification error rates for four datasets}
         \label{fig:part_b}
     \end{figure}
+
+    The table reporting the minimum test error and tree depth for the various datasets is shown 
+    in table \ref{tab:tree_misclass_error_all}
+
+    \begin{table}[h]
+        \centering
+        \begin{tabular}{lccc}
+            \toprule
+            Dataset & Depth & Training Misclassification & Validation Misclassification \\
+            \midrule
+            Satimage & 9 & 0.059076 & 0.138000 \\
+            Madelon & 6  & 0.089000 & 0.201667 \\
+            Hill-Valley & 8  & 0.354785 & 0.465347 \\
+            Covtype & 12 & 0.117659 & 0.368692 \\
+            \bottomrule
+        \end{tabular}
+        \caption{Lowest misclassification error across datasets}
+        \label{tab:tree_misclass_error_all}
+    \end{table}
     
     \item On the Gisette dataset, for each off \(k \in \{3,10,30,100,300\}\) train a random forest with \(k\) trees where
     the split attribute at each node is chosen from a random subset of \(71\approx\sqrt{5000}\) features.  Use the trained
-    trrees to predict the class labels on the training and test sets and obtain the training and test misclassification
+    trees to predict the class labels on the training and test sets and obtain the training and test misclassification
     errors.  Plot on the same graph the training and test errors vs. number of trees \(k\) as two seperate curves.  Report
     the training and test misclassification errors in a table.
+
+    We do this in Python, and obtain the  plot of the training and test misclassification errors vs tree 
+    depth shown in figure \ref{fig:random_forest_gisette}:
+
+    \begin{figure}[h]
+        \centering
+        \includegraphics[totalheight=7cm]{../figures/gisette_misclassification_error_2.png}
+        \caption{Misclassification Error vs Tree Depth, Training and Validation: Gisette dataset}
+        \label{fig:random_forest_gisette}
+    \end{figure}
+
+    The table reporting the training and test errors for various random forests are shown in 
+    table \ref{tab:random_forest_gisette}:
+
+    \begin{table}[h]
+        \begin{tabular}{ccc}
+            \toprule
+            Number of Trees & Training Misclassification Error & Validation Misclassification Error \\
+            \midrule
+            3 & 0.011167 & 0.064000 \\
+            10 & 0.001333 & 0.047000 \\
+            30 & 0.000167 & 0.033000 \\
+            100 & 0.000000 & 0.029000 \\
+            300 & 0.000000 & 0.034000 \\
+            \bottomrule
+        \end{tabular}
+        \caption{Misclassification errors, Random Forests, Gisette Dataset}
+        \label{tab:random_forest_gisette}
+    \end{table}
+
     \item Repeat point 3.) on the satimage, madelon, and hill-valley datasets.
+    
+    The images showing the training and test misclassification errors are displayed in figure \ref{fig:stacked_images}.
+
+    \begin{figure}[h]
+        \centering
+        \begin{subfigure}{\textwidth}
+            \centering
+            \includegraphics[width=0.5\textwidth]{../figures/satimage_misclassification_error_2.png}
+        \end{subfigure}
+        
+        \vspace{0.5em}
+        
+        \begin{subfigure}{\textwidth}
+            \centering
+            \includegraphics[width=0.5\textwidth]{../figures/madelon_misclassification_error_2.png}
+        \end{subfigure}
+        
+        \vspace{0.5em}
+        
+        \begin{subfigure}{\textwidth}
+            \centering
+            \includegraphics[width=0.5\textwidth]{../figures/hill_valley_misclassification_error_2.png}
+        \end{subfigure}
+        
+        \caption{Plots Showing training and test misclassification errors vs number of trees.}
+        \label{fig:stacked_images}
+    \end{figure}
+
     \item Repeat point 3.) on the Gisette dataset where the split attribute at each node is chosen from a 
     random subset of \(12\approx \log_2(5000)\) features, and where the split attribute at each node is chosen
     from all 5000 features, plotting all four curves (2 train and 2 test misclassification errors) on the same graph.
