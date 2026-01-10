@@ -59,7 +59,7 @@ datasets = [
     }
 ]
 
-
+#parts a and b
 for i in datasets:
     #special case for the Covtype dataset.
     if i["name"] == "Covtype":
@@ -134,3 +134,43 @@ for i in datasets:
 
     #print
     print(LATEX_table)
+
+
+#parts c and d
+k_values = [3, 10, 30, 100, 300]
+
+#only need some of the datasets in the dict
+selected_names = {"Gisette", "Satimage", "Madelon", "Hill-Valley"}
+filtered_datasets = list(filter(lambda da: da["name"] in selected_names, datasets))
+
+#loop over filter datasets for parts c and d:
+for data in filtered_datasets:
+    print(data["name"])
+
+    #get data
+    X_train = pd.read_csv(data["X_train"], delim_whitespace=True, header=None)
+    X_valid = pd.read_csv(data["X_valid"], delim_whitespace=True, header=None)
+
+    #got warning about y being a column vector.  Python recomended using ravel
+    y_train = pd.read_csv(data["y_train"], header=None).values.ravel()
+    y_valid = pd.read_csv(data["y_valid"], header=None).values.ravel()
+
+    train_errors = []
+    test_errors = []
+
+    #iterate over k values
+    for k in k_values:
+        forest = RandomForestClassifier(n_estimators=k, max_features=71)
+        forest = forest.fit(X_train, y_train)
+
+        #making predictions
+        prediction_training = forest.predict(X_train)
+        prediction_validation = forest.predict(X_valid)
+
+        #error
+        train_error = 1 - accuracy_score(y_train, prediction_training)
+        valid_error = 1 - accuracy_score(y_valid, prediction_validation)
+
+        #append to array
+        train_errors.append(train_error)
+        test_errors.append(valid_error)
