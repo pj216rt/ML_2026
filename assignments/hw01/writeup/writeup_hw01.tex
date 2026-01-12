@@ -44,7 +44,7 @@
         \label{fig:table1}
     \end{figure}
 
-    The table freporting the minimum test error and the tree depth for which the minium was attained
+    The table reporting the minimum test error and the tree depth for which the minium was attained
     are displayed in table \ref{tab:gissette_tree_misclass_error}.
 
     \begin{table}[h]
@@ -60,6 +60,10 @@
         \label{tab:gissette_tree_misclass_error}
     \end{table}
 
+    In general, the training error decreased as the depth increased.  The validation error more or less followed this
+    trajectory, but levelled off for deeper trees.
+
+    \newpage
     \item Repeat point 1.) on the satimage, madelon, hill-valley, and covtype datasets.
     
     We can do this also, and obtain the four images shown in figure \ref{fig:part_b}.
@@ -69,11 +73,11 @@
         % First row of images
         \begin{minipage}{0.48\textwidth}
             \centering
-            \includegraphics[width=\linewidth]{../figures/satimage_misclassification_error.png}
+            \includegraphics[width=0.8\linewidth]{../figures/satimage_misclassification_error.png}
         \end{minipage}\hfill
         \begin{minipage}{0.48\textwidth}
             \centering
-            \includegraphics[width=\linewidth]{../figures/madelon_misclassification_error.png}
+            \includegraphics[width=0.8\linewidth]{../figures/madelon_misclassification_error.png}
         \end{minipage}
         
         \vspace{1cm} % Adds vertical space between rows
@@ -81,11 +85,11 @@
         % Second row of images
         \begin{minipage}{0.48\textwidth}
             \centering
-            \includegraphics[width=\linewidth]{../figures/hill_valley_misclassification_error.png}
+            \includegraphics[width=0.8\linewidth]{../figures/hill_valley_misclassification_error.png}
         \end{minipage}\hfill
         \begin{minipage}{0.48\textwidth}
             \centering
-            \includegraphics[width=\linewidth]{../figures/Covtype_misclassification_error.png}
+            \includegraphics[width=0.8\linewidth]{../figures/Covtype_misclassification_error.png}
         \end{minipage}
         
         \caption{Training and Validation datasets misclassification error rates for four datasets}
@@ -110,7 +114,11 @@
         \caption{Lowest misclassification error across datasets}
         \label{tab:tree_misclass_error_all}
     \end{table}
+
+    In general, we see the same pattern as with the Gisette dataset.  The training error is almost always lower than the 
+    validation error.
     
+    \newpage
     \item On the Gisette dataset, for each off \(k \in \{3,10,30,100,300\}\) train a random forest with \(k\) trees where
     the split attribute at each node is chosen from a random subset of \(71\approx\sqrt{5000}\) features.  Use the trained
     trees to predict the class labels on the training and test sets and obtain the training and test misclassification
@@ -146,6 +154,10 @@
         \label{tab:random_forest_gisette}
     \end{table}
 
+    Beyond a certain point, the error rates for both the training and the validation datasets do not improve.
+    This also shows the training error being 0 for 100 and 300 trees in the random forest. 
+
+    \newpage
     \item Repeat point 3.) on the satimage, madelon, and hill-valley datasets.
     
     The images showing the training and test misclassification errors are displayed in figure \ref{fig:stacked_images}
@@ -153,26 +165,26 @@
 
     \begin{figure}[h]
         \centering
-        \begin{subfigure}{\textwidth}
+        %top row
+        \begin{subfigure}{0.48\textwidth}
             \centering
-            \includegraphics[width=0.5\textwidth]{../figures/satimage_misclassification_error_2.png}
+            \includegraphics[width=\linewidth]{../figures/satimage_misclassification_error_2.png}
+        \end{subfigure}
+        \hfill
+        \begin{subfigure}{0.48\textwidth}
+            \centering
+            \includegraphics[width=\linewidth]{../figures/madelon_misclassification_error_2.png}
         \end{subfigure}
         
-        \vspace{0.5em}
-        
-        \begin{subfigure}{\textwidth}
+        \vspace{0.75em}
+
+        %bottom row
+        \begin{subfigure}{0.6\textwidth}
             \centering
-            \includegraphics[width=0.5\textwidth]{../figures/madelon_misclassification_error_2.png}
+            \includegraphics[width=\linewidth]{../figures/hill_valley_misclassification_error_2.png}
         \end{subfigure}
         
-        \vspace{0.5em}
-        
-        \begin{subfigure}{\textwidth}
-            \centering
-            \includegraphics[width=0.5\textwidth]{../figures/hill_valley_misclassification_error_2.png}
-        \end{subfigure}
-        
-        \caption{Plots Showing training and test misclassification errors vs number of trees.}
+        \caption{Plots showing training and test misclassification errors versus number of trees.}
         \label{fig:stacked_images}
     \end{figure}
 
@@ -188,15 +200,15 @@
             Satimage & 100 & 0.000000 & 0.101000 \\
             Satimage & 300 & 0.000000 & 0.099500 \\
             \midrule
-            Madelon & 3   & 0.063000 & 0.325000 \\
-            Madelon & 10  & 0.010500 & 0.271667 \\
-            Madelon & 30  & 0.000000 & 0.228333 \\
+            Madelon & 3 & 0.063000 & 0.325000 \\
+            Madelon & 10 & 0.010500 & 0.271667 \\
+            Madelon & 30 & 0.000000 & 0.228333 \\
             Madelon & 100 & 0.000000 & 0.181667 \\
             Madelon & 300 & 0.000000 & 0.175000 \\
             \midrule
-            Hill-Valley & 3   & 0.080858 & 0.483498 \\
-            Hill-Valley & 10  & 0.023102 & 0.460396 \\
-            Hill-Valley & 30  & 0.000000 & 0.466997 \\
+            Hill-Valley & 3 & 0.080858 & 0.483498 \\
+            Hill-Valley & 10 & 0.023102 & 0.460396 \\
+            Hill-Valley & 30 & 0.000000 & 0.466997 \\
             Hill-Valley & 100 & 0.000000 & 0.453795 \\
             Hill-Valley & 300 & 0.000000 & 0.443894 \\
             \bottomrule
@@ -215,8 +227,12 @@
         \centering
         \includegraphics[totalheight=7cm]{../figures/gisette_misclassification_error_3.png}
         \caption{Misclassification Error vs Tree Depth, Training and Validation: Gisette dataset}
-        \label{fig:random_forest_gisette}
+        \label{fig:random_forest_different_features}
     \end{figure}
+
+    In this plot, we can see that the training error is not meaningfully different when we increase the number of features
+    used.  In fact, the validation error is worse for the random forrest with 5000 features than for the forrest with 12 
+    features.
 
 \end{enumerate}
 
