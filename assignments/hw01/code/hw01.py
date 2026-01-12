@@ -91,6 +91,7 @@ for i in datasets:
         y_train = pd.read_csv(i["y_train"], header=None)
         y_valid = pd.read_csv(i["y_valid"], header=None)
 
+    print(y_train.shape)
     #initialize empty arrays
     train_err = []
     valid_err = []
@@ -223,7 +224,63 @@ node_amount = [12, None]
 
 results = []
 
+#need to get the Gisette dataset
+for i in datasets:
+    if i["name"] == "Gisette":
+        X_train = pd.read_csv(i["X_train"], delim_whitespace=True, header=None)
+        X_valid = pd.read_csv(i["X_valid"], delim_whitespace=True, header=None)
+
+        y_train = pd.read_csv(i["y_train"], header=None).values.ravel()
+        y_valid = pd.read_csv(i["y_valid"], header=None).values.ravel()
+
+        break
+
 for features in node_amount:
+    print(features)
+    #cleaning up for later
+    if features == 12:
+        label = "12"
+    else:
+        label = "5000"
+
+    #loop over the number of trees
     for k in k_values:
-        #randomfor = RandomForestClassifier(n_estimators=k, max_features=features)
-        #randomfor = randomfor()
+        print(k)
+        randomfor = RandomForestClassifier(n_estimators=k, max_features=features)
+        randomfor = randomfor.fit(X_train, y_train)
+
+        prediction_training = randomfor.predict(X_train)
+        prediction_validation = randomfor.predict(X_valid)
+
+        #error
+        train_error = 1 - accuracy_score(y_train, prediction_training)
+        valid_error = 1 - accuracy_score(y_valid, prediction_validation)
+
+        results.append({
+            "features": label,
+            "k": k,
+            "train_err": train_error,
+            "valid_err": valid_error
+        })
+
+#creating dataframe from the list of results
+df = pd.DataFrame(results)
+
+plt.figure()
+
+#needed to convert to numpy for some reason?
+for label in ["12", "5000"]:
+    sub = df[df["features"] == label].sort_values("k")
+    plt.plot(sub["k"].to_numpy(), sub["train_err"].to_numpy(), 
+             marker="o", label=f"Train (features={label})")
+    plt.plot(sub["k"].to_numpy(), sub["valid_err"].to_numpy(), 
+             marker="o", label=f"Valid (features={label})")
+
+plt.xlabel("Number of trees")
+plt.ylabel("Misclassification error")
+plt.title("Gisette: Random Forest Misclassification Error")
+plt.grid(True, which="both", linestyle="--", linewidth=0.5)
+plt.legend()
+plt.tight_layout()
+plt.savefig("assignments/hw01/figures/gisette_misclassification_error_3.png", dpi=400, bbox_inches="tight")
+plt.close()
