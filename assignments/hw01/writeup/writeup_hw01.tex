@@ -9,9 +9,26 @@
 \usepackage{enumitem}
 \usepackage{pdfpages}
 \usepackage{graphicx}
+\usepackage{listings}
+\usepackage{xcolor}
 \usepackage{subcaption}
 \usepackage{float}
 \usepackage{amsmath}
+
+%fancyheadr fix
+\setlength{\headheight}{15pt}
+
+%commands to lslistings
+\lstset{
+    basicstyle=\ttfamily\small,
+    breaklines=true,     
+    breakatwhitespace=true,
+    frame=single,
+    numbers=left,
+    numberstyle=\tiny,
+    columns=fullflexible,
+    keepspaces=true
+}
 
 
 %title info
@@ -47,7 +64,7 @@
     The table reporting the minimum test error and the tree depth for which the minium was attained
     are displayed in table \ref{tab:gissette_tree_misclass_error}.
 
-    \begin{table}[h]
+    \begin{table}[htbp]
         \centering
         \begin{tabular}{ccc}
             \toprule
@@ -68,7 +85,7 @@
     
     We can do this also, and obtain the four images shown in figure \ref{fig:part_b}.
 
-    \begin{figure}[h]
+    \begin{figure}[htbp]
         \centering
         % First row of images
         \begin{minipage}{0.48\textwidth}
@@ -99,7 +116,7 @@
     The table reporting the minimum test error and tree depth for the various datasets is shown 
     in table \ref{tab:tree_misclass_error_all}
 
-    \begin{table}[h]
+    \begin{table}[htbp]
         \centering
         \begin{tabular}{lccc}
             \toprule
@@ -128,7 +145,7 @@
     We do this in Python, and obtain the  plot of the training and test misclassification errors vs tree 
     depth shown in figure \ref{fig:random_forest_gisette}:
 
-    \begin{figure}[h]
+    \begin{figure}[htbp]
         \centering
         \includegraphics[totalheight=7cm]{../figures/gisette_misclassification_error_2.png}
         \caption{Misclassification Error vs Tree Depth, Training and Validation: Gisette dataset}
@@ -138,7 +155,7 @@
     The table reporting the training and test errors for various random forests are shown in 
     table \ref{tab:random_forest_gisette}:
 
-    \begin{table}[h]
+    \begin{table}[htbp]
         \begin{tabular}{ccc}
             \toprule
             Number of Trees & Training Misclassification Error & Validation Misclassification Error \\
@@ -163,7 +180,7 @@
     The images showing the training and test misclassification errors are displayed in figure \ref{fig:stacked_images}
     and we can create a table for this, shown in table \ref{tab:rf_misclass_error_all}.
 
-    \begin{figure}[h]
+    \begin{figure}[htbp]
         \centering
         %top row
         \begin{subfigure}{0.48\textwidth}
@@ -188,7 +205,7 @@
         \label{fig:stacked_images}
     \end{figure}
 
-    \begin{table}[h]
+    \begin{table}[htbp]
         \centering
         \begin{tabular}{lccc}
             \toprule
@@ -223,10 +240,10 @@
 
     Doing this gives us figure \ref{fig:random_forest_different_features}:
 
-    \begin{figure}[h]
+    \begin{figure}[htbp]
         \centering
         \includegraphics[totalheight=7cm]{../figures/gisette_misclassification_error_3.png}
-        \caption{Misclassification Error vs Number of Trees and NUmber of Featues, 
+        \caption{Misclassification Error vs Number of Trees and Number of Featues, 
         Training and Validation: Gisette dataset}
         \label{fig:random_forest_different_features}
     \end{figure}
@@ -234,8 +251,13 @@
     In this plot, we can see that the training error is not meaningfully different when we increase the number of features
     used.  In fact, the validation error is worse for the random forrest with 5000 features than for the forrest with 12 
     features.
-
 \end{enumerate}
 
+\newpage
+\newpage
+%adding code
+\appendix
+\section*{Code}
+\lstinputlisting[language=Python]{../code/hw01.py}
 
 \end{document}
