@@ -53,7 +53,7 @@
             \toprule
             Depth & Training Misclassification & Validation Misclassification \\
             \midrule
-            9 & 0.017500 & 0.061000 \\
+            10 & 0.014500 & 0.059000 \\
             \bottomrule
         \end{tabular}
         \caption{Lowest misclassification error, Gisette Dataset}
@@ -105,10 +105,10 @@
             \toprule
             Dataset & Depth & Training Misclassification & Validation Misclassification \\
             \midrule
-            Satimage & 9 & 0.059076 & 0.138000 \\
-            Madelon & 6  & 0.089000 & 0.201667 \\
-            Hill-Valley & 8  & 0.354785 & 0.465347 \\
-            Covtype & 12 & 0.117659 & 0.368692 \\
+            Satimage & 11 & 0.029538 & 0.141500 \\
+            Madelon & 6 & 0.089000 & 0.200000 \\
+            Hill-Valley & 8 & 0.344884 & 0.463696 \\
+            Covtype & 12 & 0.117725 & 0.368371 \\
             \bottomrule
         \end{tabular}
         \caption{Lowest misclassification error across datasets}
@@ -143,11 +143,11 @@
             \toprule
             Number of Trees & Training Misclassification Error & Validation Misclassification Error \\
             \midrule
-            3 & 0.011167 & 0.064000 \\
-            10 & 0.001333 & 0.047000 \\
-            30 & 0.000167 & 0.033000 \\
-            100 & 0.000000 & 0.029000 \\
-            300 & 0.000000 & 0.034000 \\
+            3 & 0.013000 & 0.072000 \\
+            10 & 0.001667 & 0.048000 \\
+            30 & 0.000000 & 0.039000 \\
+            100 & 0.000000 & 0.036000 \\
+            300 & 0.000000 & 0.029000 \\
             \bottomrule
         \end{tabular}
         \caption{Misclassification errors, Random Forests, Gisette Dataset}
@@ -194,23 +194,23 @@
             \toprule
             Dataset & Num. Trees & Training Misclass. Err. & Validation Misclass. Err. \\
             \midrule
-            Satimage & 3 & 0.027959 & 0.152000 \\
-            Satimage & 10 & 0.005637 & 0.114000 \\
-            Satimage & 30 & 0.000000 & 0.103500 \\
-            Satimage & 100 & 0.000000 & 0.101000 \\
-            Satimage & 300 & 0.000000 & 0.099500 \\
+            Satimage & 3 & 0.025254 & 0.136000 \\
+            Satimage & 10 & 0.005411 & 0.117500 \\
+            Satimage & 30 & 0.000902 & 0.106500 \\
+            Satimage & 100 & 0.000000 & 0.104500 \\
+            Satimage & 300 & 0.000000 & 0.100500 \\
             \midrule
-            Madelon & 3 & 0.063000 & 0.325000 \\
-            Madelon & 10 & 0.010500 & 0.271667 \\
-            Madelon & 30 & 0.000000 & 0.228333 \\
-            Madelon & 100 & 0.000000 & 0.181667 \\
-            Madelon & 300 & 0.000000 & 0.175000 \\
+            Madelon & 3 & 0.068000 & 0.336667 \\
+            Madelon & 10 & 0.006500 & 0.291667 \\
+            Madelon & 30 & 0.000000 & 0.211667 \\
+            Madelon & 100 & 0.000000 & 0.195000 \\
+            Madelon & 300 & 0.000000 & 0.193333 \\
             \midrule
-            Hill-Valley & 3 & 0.080858 & 0.483498 \\
-            Hill-Valley & 10 & 0.023102 & 0.460396 \\
-            Hill-Valley & 30 & 0.000000 & 0.466997 \\
-            Hill-Valley & 100 & 0.000000 & 0.453795 \\
-            Hill-Valley & 300 & 0.000000 & 0.443894 \\
+            Hill-Valley & 3 & 0.092409 & 0.457096 \\
+            Hill-Valley & 10 & 0.016502 & 0.458746 \\
+            Hill-Valley & 30 & 0.001650 & 0.453795 \\
+            Hill-Valley & 100 & 0.000000 & 0.457096 \\
+            Hill-Valley & 300 & 0.000000 & 0.457096 \\
             \bottomrule
         \end{tabular}
         \caption{Misclassification errors for Random Forests across datasets}
@@ -221,12 +221,13 @@
     random subset of \(12\approx \log_2(5000)\) features, and where the split attribute at each node is chosen
     from all 5000 features, plotting all four curves (2 train and 2 test misclassification errors) on the same graph.
 
-    Doing this gives us the following plot:
+    Doing this gives us figure \ref{fig:random_forest_different_features}:
 
     \begin{figure}[h]
         \centering
         \includegraphics[totalheight=7cm]{../figures/gisette_misclassification_error_3.png}
-        \caption{Misclassification Error vs Tree Depth, Training and Validation: Gisette dataset}
+        \caption{Misclassification Error vs Number of Trees and NUmber of Featues, 
+        Training and Validation: Gisette dataset}
         \label{fig:random_forest_different_features}
     \end{figure}
 

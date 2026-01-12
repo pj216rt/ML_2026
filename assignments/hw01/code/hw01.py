@@ -10,6 +10,7 @@ depths = range(1, 13)
 
 #creating a dict to help loop over the datasets more
 #got tired of typing the same code for everything
+#each dict has files paths and some data for working with the results later
 datasets = [
     {
         "name": "Gisette",
@@ -71,16 +72,19 @@ datasets = [
 
 #parts a and b
 for i in datasets:
-    #special case for the Covtype dataset.
+    #special case for the Covtype dataset.  Last column is the label
     if i["name"] == "Covtype":
         data = pd.read_csv(i["X_train"], header=None).to_numpy()
         
+        #all columns except the last one
         X = data[:, :-1]
         y = data[:, -1]
 
+        #the first 11340 + 3780 rows are training
         X_train = X[:15120]
         y_train = y[:15120]
 
+        #the rest test
         X_valid = X[15120:]
         y_valid = y[15120:]
     else:
@@ -91,7 +95,8 @@ for i in datasets:
         y_train = pd.read_csv(i["y_train"], header=None)
         y_valid = pd.read_csv(i["y_valid"], header=None)
 
-    print(y_train.shape)
+    #basically, we end up with X and y train and X and Y valid
+
     #initialize empty arrays
     train_err = []
     valid_err = []
