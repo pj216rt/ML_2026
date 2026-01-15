@@ -35,3 +35,8 @@ print(mean_test_mse)
 
 #OLS ridge regression
 lambdas = [0, 1e-5, 1e-4, 1e-3, 1e-2, 1e-1]
+
+#need to loop over the lambdas
+
+for i in lambdas:
+    print(i)
