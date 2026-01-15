@@ -50,4 +50,26 @@ variables from the data.  From the remaining variables use all but the last vari
 predictors and the log of the last variable.
 
 Obtain all results using 5-fold cross-validation, which is computed as follows:
+
+\begin{enumerate}
+    \item Generate a random permutation of the data.  Use this randomized permutation to 
+    split the data into 5 disjoint subsets of almost equal size.
+    \item For each fold \(i\in\{1,\dots, 5\}\), train the model on all data except subset \(i\) and test
+    it on subset \(i\), obtaining test error \(\epsilon_i\).
+    \item Obtain the final test error as the average of the 5 test errors \(\epsilon_i\) obtained above.
+\end{enumerate}
+
+Report results for the following models:
+
+\begin{itemize}
+    \item Null model.  Report the average train and test MSE of the null model that always predicts training 
+    \(\bar{y}\) (average training \(y\))
+    \item OLS regression computed analytically by solving the following normal equations:
+    \item OLS regression with backward elimination, for example using SequentialFeatureSelector.  For each number of features \(k\in\{5,10,15,\dots,55\}\)
+    report the average training and test \(R^2\) and MSE in a table.  On the same graph, plot the average
+    training and test \(R^2\) vs \(k\) as two seperate cruves
+    \item Random forest regression with 100 trees and maximum depths \(1,2,\dots,10\).  Report the average 
+    training, OOB, and test \(R^2\) and MSE and their standard deviations in each case.  
+\end{itemize}
+
 \end{document}
