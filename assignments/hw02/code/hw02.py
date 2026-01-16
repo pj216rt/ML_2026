@@ -8,6 +8,7 @@ import matplotlib.pyplot as plt
 from sklearn.metrics import mean_squared_error, r2_score
 from sklearn.linear_model import LinearRegression
 from sklearn.feature_selection import SequentialFeatureSelector
+from sklearn.pipeline import Pipeline
 
 #reading in the csv file
 df = pd.read_csv('assignments/hw02/data/OnlineNewsPopularity/OnlineNewsPopularity.csv')
@@ -51,48 +52,18 @@ lambdas = [0, 1e-5, 1e-4, 1e-3, 1e-2, 1e-1]
 
 #OLS regression with backwards elimination
 #https://scikit-learn.org/stable/modules/generated/sklearn.feature_selection.SequentialFeatureSelector.html
-k_values = range(5, 60, 5)
+
+#maybe pipelines? Avoid leaking test set to the train set?
+#https://scikit-learn.org/stable/modules/generated/sklearn.pipeline.Pipeline.html
+k_values = range(5, 30, 5)
 results = []
 
 for k in k_values:
-    train_r2, test_r2 = [], []
-    train_mse, test_mse = [], []
-
-    #split these into train and test sets
-    for train_idx, test_idx in cv.split(X):
-        X_train, X_test = X.iloc[train_idx], X.iloc[test_idx]
-        y_train, y_test = Y.iloc[train_idx], Y.iloc[test_idx]
-
-        #backwards feature selection with SequentialFeatureSelection
-        #trying to get both R2 and MSE
-        backwards_features = SequentialFeatureSelector(
-            LinearRegression(),
-            n_features_to_select=k,
-            direction="backward",
-            scoring= "r2",
-            cv=5
-        )
-
-        #fit
-        backwards_features.fit(X_train, y_train)
-
-        #need way to select the features that are selected
-        X_train_select_feat = backwards_features.transform(X_train)
-        X_test_select_feat = backwards_features.transform(X_test)
-
-        #fit this reduced model
-        model = LinearRegression()
-        model.fit(X_train_select_feat, y_train)
-
-        #make predictions
-        y_train_predictions = model.predict(X_train_select_feat)
-        y_test_predictions = model.predict(X_test_select_feat)
-
-        #need to get R2 and MSE now
+    print(k)
+    
 
 #random forest regression
-depths = range(1, 2)
-
+depths = range(1, 11)
 rows = []
 
 #loop over depths
@@ -114,11 +85,13 @@ for d in depths:
         y_pred_test = rf.predict(X_test)
 
         #results
+        #using the oob_prediction_ to compute MSE
         results = {
             "depth": d,
             "train_mse": mean_squared_error(y_train, y_pred_train),
             "train_R2": r2_score(y_train, y_pred_train),
-            "OOB_R2": rf.oob_score_,
+            "oob_R2": rf.oob_score_,
+            "oob_MSE": mean_squared_error(y_train, rf.oob_prediction_),
             "test_mse": mean_squared_error(y_test, y_pred_test),
             "test_R2": r2_score(y_test, y_pred_test)
         }
@@ -126,5 +99,35 @@ for d in depths:
         rows.append(results)
 
 #making table and plotting
-table1 = pd.DataFrame(rows).groupby("depth")
-print(table1)
+table1 = pd.DataFrame(rows)
+
+#need to get means and standard deviations
+#using agg function
+summary_table = table1.groupby("depth").agg(
+    train_r2_mean=("train_R2", "mean"),
+    train_r2_sd=("train_R2", "std"),
+    oob_r2_mean=("oob_R2", "mean"),
+    oob_r2_sd=("oob_R2", "std"),
+    test_r2_mean=("test_R2", "mean"),
+    test_r2_sd=("test_R2", "std"),
+    train_mse_mean=("train_mse", "mean"),
+    train_mse_sd=("train_mse", "std"),
+    oob_mse_mean=("oob_MSE", "mean"),
+    oob_mse_sd=("oob_MSE", "std"),
+    test_mse_mean=("test_mse", "mean"),
+    test_mse_sd=("test_mse", "std"),
+)
+
+print(summary_table)
+
+#needed to convert to np array
+plt.figure()
+plt.plot(summary_table.index.to_numpy(), summary_table["train_r2_mean"].to_numpy(), label="Training R2")
+plt.plot(summary_table.index.to_numpy(), summary_table["oob_r2_mean"].to_numpy(), label="OOB R2")
+plt.plot(summary_table.index.to_numpy(), summary_table["test_r2_mean"].to_numpy(), label="Test R2")
+
+plt.xlabel("Maximum Tree Depth")
+plt.ylabel("Average R2")
+plt.legend()
+plt.tight_layout()
+plt.show()
