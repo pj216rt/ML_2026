@@ -41,8 +41,57 @@ print(mean_test_mse)
 
 #OLS ridge regression
 lambdas = [0, 1e-5, 1e-4, 1e-3, 1e-2, 1e-1]
+ridge_results = []
 
 #need to loop over the lambdas
+for lam in lambdas:
+    for train_idx, test_idx in cv.split(X):
+        X_train, X_test = X.iloc[train_idx], X.iloc[test_idx]
+        y_train, y_test = Y.iloc[train_idx], Y.iloc[test_idx]
+
+        #need to get N and p
+        N,p = X_train.shape
+
+        #use @ for matrix multiplication
+        X_crossprod_N = (X_train.T @ X_train)/N
+        X_cross_Y_N = (X_train.T @ y_train)/N
+
+        #LHS
+        LHS = X_crossprod_N + (lam*np.eye(p))
+
+        #solve
+        #https://numpy.org/devdocs/reference/generated/numpy.linalg.solve.html
+        beta_hat = np.linalg.solve(LHS, X_cross_Y_N)
+
+        #make predictions
+        y_train_predictions = X_train @ beta_hat
+        y_test_predictions = X_test @ beta_hat
+
+        #log of determinant of X_crossprod_N + (lambda*I)
+        #https://numpy.org/devdocs/reference/generated/numpy.linalg.slogdet.html
+        logdet = np.linalg.slogdet(LHS)[1]
+
+        #add this stuff to the ridge results 
+        ridge_results.append({
+            "lambda": lam,
+            "train_mse": mean_squared_error(y_train, y_train_predictions),
+            "train_R2": r2_score(y_train, y_train_predictions),
+            "test_mse": mean_squared_error(y_test, y_test_predictions),
+            "test_R2": r2_score(y_test, y_test_predictions),
+            "logdeterm": logdet
+        })
+
+ridge_results = pd.DataFrame(ridge_results)
+
+#need to average across the 5 folds
+ridge_results = ridge_results.groupby("lambda").agg(
+    train_mse_mean=("train_mse", "mean"),
+    train_mse_sd=("train_mse", "std"),
+    train_R2_mean=("train_R2", "mean"),
+    train_R2_sd=("train_R2", "std"),
+    test_mse_mean=("test_mse", "mean"),
+    test_mse_sd=("test_mse", "std")
+)
 
 #proof of concept from skilearn documentation
 #for i, (train_index, test_index) in enumerate(cv.split(X)):
