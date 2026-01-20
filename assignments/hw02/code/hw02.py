@@ -136,7 +136,7 @@ plt.close()
 #https://scikit-learn.org/stable/modules/generated/sklearn.pipeline.Pipeline.html
 #don't understand them well enough
 
-
+"""
 k_values = range(5, 60, 5)
 results = []
 
@@ -200,7 +200,7 @@ for k in k_values:
 
 results_df = pd.DataFrame(results)
 print(results_df)
-
+"""
 
 #random forest regression
 depths = range(1, 11)
