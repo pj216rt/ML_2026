@@ -47,6 +47,10 @@ for lam in lambdas:
         X_train, X_test = X.iloc[train_idx], X.iloc[test_idx]
         y_train, y_test = Y.iloc[train_idx], Y.iloc[test_idx]
 
+        #need to add a column on ones
+        X_train = np.column_stack([np.ones(len(X_train)), X_train])
+        X_test = np.column_stack([np.ones(len(X_test)),  X_test])
+
         #need to get N and p
         N,p = X_train.shape
 
@@ -54,8 +58,11 @@ for lam in lambdas:
         X_crossprod_N = (X_train.T @ X_train)/N
         X_cross_Y_N = (X_train.T @ y_train)/N
 
-        #LHS
-        LHS = X_crossprod_N + (lam*np.eye(p))
+        #LHS.  Don't penalize the intercept
+        P = (lam*np.eye(p))
+        P[0, 0] = 0.0
+
+        LHS = X_crossprod_N + P
 
         #solve
         #https://numpy.org/devdocs/reference/generated/numpy.linalg.solve.html
@@ -96,7 +103,7 @@ ridge_results = ridge_results.groupby("lambda").agg(
 
 #need this as a latex table
 formatted_summary = pd.DataFrame({
-    "Depth": ridge_results.index,
+    "Lambda": ridge_results.index,
 
     "Train R2": (
         ridge_results["train_R2_mean"].round(3).astype(str)
@@ -126,8 +133,6 @@ formatted_summary = pd.DataFrame({
         + ")"
     )
 })
-
-print(formatted_summary)
 
 #format for latex
 #using the column format option felt pretty slick
@@ -177,12 +182,12 @@ plt.close()
 #OLS regression with backwards elimination
 #https://scikit-learn.org/stable/modules/generated/sklearn.feature_selection.SequentialFeatureSelector.html
 
-#maybe pipelines? Avoid leaking test set to the train set?
+#maybe pipelines?
 #https://scikit-learn.org/stable/modules/generated/sklearn.pipeline.Pipeline.html
 #don't understand them well enough
 
-"""
-k_values = range(5, 60, 5)
+
+k_values = range(40, 60, 5)
 results = []
 
 for k in k_values:
@@ -245,7 +250,7 @@ for k in k_values:
 
 results_df = pd.DataFrame(results)
 print(results_df)
-"""
+
 
 #random forest regression
 #need to change back to 11
@@ -308,7 +313,7 @@ summary_table = table1.groupby("depth").agg(
 #need astrype(str).  Rounding also probably helps
 
 formatted_summary = pd.DataFrame({
-    "Depth": summary_table.index,
+    "Lambda": summary_table.index,
 
     "Train R2": (
         summary_table["train_r2_mean"].round(3).astype(str)
