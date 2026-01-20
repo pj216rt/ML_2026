@@ -34,11 +34,8 @@ null_model = DummyRegressor(strategy="mean")
 results = cross_validate(null_model, X=X, y=Y, cv=cv, scoring="neg_mean_squared_error", return_train_score=True)
 
 #cross validate uses the negative mean squared error.  Need to negative the negative
-mean_train_mse = -results["train_score"].mean()
-mean_test_mse = -results["test_score"].mean()
-
-print(mean_train_mse)
-print(mean_test_mse)
+print("Train MSE:", -results["train_score"].mean())
+print("Test  MSE:", -results["test_score"].mean())
 
 #OLS ridge regression
 lambdas = [0, 1e-5, 1e-4, 1e-3, 1e-2, 1e-1]
@@ -98,6 +95,52 @@ ridge_results = ridge_results.groupby("lambda").agg(
 )
 
 #need this as a latex table
+formatted_summary = pd.DataFrame({
+    "Depth": ridge_results.index,
+
+    "Train R2": (
+        ridge_results["train_R2_mean"].round(3).astype(str)
+        + " ("
+        + ridge_results["train_R2_sd"].round(3).astype(str)
+        + ")"
+    ),
+
+    "Test R2": (
+        ridge_results["test_R2_mean"].round(3).astype(str)
+        + " ("
+        + ridge_results["test_R2_sd"].round(3).astype(str)
+        + ")"
+    ),
+
+    "Train MSE": (
+        ridge_results["train_mse_mean"].round(3).astype(str)
+        + " ("
+        + ridge_results["train_mse_sd"].round(3).astype(str)
+        + ")"
+    ),
+
+    "Test MSE": (
+        ridge_results["test_mse_mean"].round(3).astype(str)
+        + " ("
+        + ridge_results["test_mse_sd"].round(3).astype(str)
+        + ")"
+    )
+})
+
+print(formatted_summary)
+
+#format for latex
+#using the column format option felt pretty slick
+#need escape bc of special characters for LATEX
+LATEX_table = formatted_summary.to_latex(
+    index=False,
+    caption="Mean (SD) of MSE and $R^2$ 5 fold CV.  Ridge Like Regression.",
+    label="tab:ridge_mean_sd",
+    column_format="c" * formatted_summary.shape[1],
+    escape=False
+)
+
+print(LATEX_table)
 
 #plot of average training and test MSE vs Lambda
 plt.figure()

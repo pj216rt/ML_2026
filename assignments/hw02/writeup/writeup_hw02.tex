@@ -77,7 +77,25 @@ Report results for the following models:
     as two seperate curves.  Also plot the average value of the logarithm of the determinant of 
     \(\frac{1}{N}X^T X + \lambda I_p\) vs \(\lambda\).
 
-    We do this in Python and obtain figure \ref{fig:train_test_mse} and figure \ref{fig:log_determinant}
+    We do this in Python and obtain table \ref{tab:ridge_mean_sd}, figure \ref{fig:train_test_mse}, and figure \ref{fig:log_determinant}
+
+    \begin{table}[htbp]
+        \centering
+        \begin{tabular}{ccccc}
+            \toprule
+            Depth & Train R2 & Test R2 & Train MSE & Test MSE \\
+            \midrule
+            0.000000 & 0.127 (0.001) & 0.028 (0.209) & 0.756 (0.004) & 0.842 (0.187) \\
+            0.000010 & 0.127 (0.001) & -0.08 (0.451) & 0.756 (0.004) & 0.937 (0.399) \\
+            0.000100 & 0.127 (0.001) & -0.56 (1.523) & 0.756 (0.004) & 1.356 (1.336) \\
+            0.001000 & 0.099 (0.001) & -3.212 (7.391) & 0.78 (0.004) & 3.675 (6.467) \\
+            0.010000 & -0.066 (0.003) & -4.252 (9.346) & 0.923 (0.005) & 4.583 (8.177) \\
+            0.100000 & -0.194 (0.005) & -1.004 (1.798) & 1.034 (0.006) & 1.742 (1.578) \\
+            \bottomrule
+        \end{tabular}
+        \caption{Mean (SD) of MSE and $R^2$ 5 fold CV.  Ridge-like Regression.}
+        \label{tab:ridge_mean_sd}
+    \end{table}
 
     \begin{figure}[htbp]
         \centering
@@ -103,6 +121,7 @@ Report results for the following models:
     In Python, we can do this and obtain table 
 
     \begin{table}[htbp]
+        \centering
         \begin{tabular}{ccccccc}
             \toprule
             Depth & Train R2 & Test R2 & Train MSE & Test MSE & OOB R2 & OOB MSE \\
