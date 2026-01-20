@@ -217,8 +217,7 @@ for k in k_values:
 
         t0 = time.time()
         feat_select.fit(X_train, y_train)
-        if fold == 1:
-            print(f"k={k}: SFS fit took {time.time() - t0:.2f}s on fold 1")
+        print(f"Time: {time.time() - t0:.3f}s, fold: {fold}")
 
         #model_fitted = feat_select.fit(X_train, y_train)
 
@@ -251,10 +250,35 @@ for k in k_values:
 results_df = pd.DataFrame(results)
 print(results_df)
 
+#latex table.  no index.  only 4 decimal places
+LATEX_table = results_df[["k", "train_r2", "test_r2"]].to_latex(
+    index=False,
+    float_format="%.4f",
+    caption="Average Training and Test $R^2$ for Backward SFS",
+    label="tab:r2_feature_selection",
+    column_format="ccc"
+)
 
+print(LATEX_table)
+
+#need to plot
+plt.figure()
+plt.plot(results_df["k"].to_numpy(), results_df["train_r2"].to_numpy(), marker="o", label="Training R2")
+plt.plot(results_df["k"].to_numpy(), results_df["test_r2"].to_numpy(), marker="o", label="Test R2")
+plt.xlabel("Number of Features")
+plt.ylabel("R2")
+plt.title("Average Training and Test R2 vs Number of Features")
+plt.legend()
+plt.tight_layout()
+#plt.show()
+plt.savefig("assignments/hw02/figures/feature_selection_train_test.png", dpi=400, bbox_inches="tight")
+plt.close()
+
+
+"""
 #random forest regression
 #need to change back to 11
-depths = range(1, 5)
+depths = range(1, 11)
 rows = []
 
 #loop over depths
@@ -381,8 +405,10 @@ plt.plot(summary_table.index.to_numpy(), summary_table["test_r2_mean"].to_numpy(
 
 plt.xlabel("Maximum Tree Depth")
 plt.ylabel("Average R2")
+plt.title("Average Training, OOB, and Test R2 vs Tree Depth")
 plt.legend()
 plt.tight_layout()
 #plt.show()
 plt.savefig("assignments/hw02/figures/train_oob_test_r2.png", dpi=400, bbox_inches="tight")
 plt.close()
+"""
