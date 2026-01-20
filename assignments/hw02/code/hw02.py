@@ -97,6 +97,8 @@ ridge_results = ridge_results.groupby("lambda").agg(
     logdeterm_mean=("logdeterm", "mean")
 )
 
+#need this as a latex table
+
 #plot of average training and test MSE vs Lambda
 plt.figure()
 plt.plot(ridge_results.index.to_numpy(), ridge_results["train_mse_mean"].to_numpy(), label="Training MSE")
@@ -203,7 +205,8 @@ print(results_df)
 """
 
 #random forest regression
-depths = range(1, 11)
+#need to change back to 11
+depths = range(1, 5)
 rows = []
 
 #loop over depths
@@ -258,7 +261,69 @@ summary_table = table1.groupby("depth").agg(
     test_mse_sd=("test_mse", "std"),
 )
 
-print(summary_table)
+#better way to report this?
+#need astrype(str).  Rounding also probably helps
+
+formatted_summary = pd.DataFrame({
+    "Depth": summary_table.index,
+
+    "Train R2": (
+        summary_table["train_r2_mean"].round(3).astype(str)
+        + " ("
+        + summary_table["train_r2_sd"].round(3).astype(str)
+        + ")"
+    ),
+
+    "Test R2": (
+        summary_table["test_r2_mean"].round(3).astype(str)
+        + " ("
+        + summary_table["test_r2_sd"].round(3).astype(str)
+        + ")"
+    ),
+
+    "Train MSE": (
+        summary_table["train_mse_mean"].round(3).astype(str)
+        + " ("
+        + summary_table["train_mse_sd"].round(3).astype(str)
+        + ")"
+    ),
+
+    "Test MSE": (
+        summary_table["test_mse_mean"].round(3).astype(str)
+        + " ("
+        + summary_table["test_mse_sd"].round(3).astype(str)
+        + ")"
+    ),
+
+    "OOB R2": (
+        summary_table["oob_r2_mean"].round(3).astype(str)
+        + " ("
+        + summary_table["oob_r2_sd"].round(3).astype(str)
+        + ")"
+    ),
+
+    "OOB MSE": (
+        summary_table["oob_mse_mean"].round(3).astype(str)
+        + " ("
+        + summary_table["oob_mse_sd"].round(3).astype(str)
+        + ")"
+    )
+})
+
+print(formatted_summary)
+
+#format for latex
+#using the column format option felt pretty slick
+#need escape bc of special characters for LATEX
+LATEX_table = formatted_summary.to_latex(
+    index=False,
+    caption="Mean (SD) of MSE and $R^2$ for various tree depths for a random forest of 100 trees.",
+    label="tab:mean_sd_rf",
+    column_format="c" * formatted_summary.shape[1],
+    escape=False
+)
+
+print(LATEX_table)
 
 #needed to convert to np array
 plt.figure()
@@ -270,4 +335,6 @@ plt.xlabel("Maximum Tree Depth")
 plt.ylabel("Average R2")
 plt.legend()
 plt.tight_layout()
-plt.show()
+#plt.show()
+plt.savefig("assignments/hw02/figures/train_oob_test_r2.png", dpi=400, bbox_inches="tight")
+plt.close()

@@ -79,14 +79,14 @@ Report results for the following models:
 
     We do this in Python and obtain figure \ref{fig:train_test_mse} and figure \ref{fig:log_determinant}
 
-    \begin{figure}[h]
+    \begin{figure}[htbp]
         \centering
         \includegraphics[totalheight=7cm]{../figures/train_test_mse.png}
         \caption{Average training and testing MSE vs Lambda.}
         \label{fig:train_test_mse}
     \end{figure}
 
-    \begin{figure}[h]
+    \begin{figure}[htbp]
         \centering
         \includegraphics[totalheight=7cm]{../figures/log_determinant.png}
         \caption{Average log determinant vs Lambda.}
@@ -99,6 +99,23 @@ Report results for the following models:
     \item Random forest regression with 100 trees and maximum depths \(1,2,\dots,10\).  Report the average 
     training, OOB, and test \(R^2\) and MSE and their standard deviations in each case.  Also, plot the average
     training, OOB, and test \(R^2\) vs the maximum depth as three seperate curves.  
+
+    In Python, we can do this and obtain table 
+
+    \begin{table}[htbp]
+        \begin{tabular}{ccccccc}
+            \toprule
+            Depth & Train R2 & Test R2 & Train MSE & Test MSE & OOB R2 & OOB MSE \\
+            \midrule
+            1 & 0.055 (0.001) & 0.054 (0.004) & 0.818 (0.005) & 0.819 (0.018) & 0.054 (0.001) & 0.819 (0.005) \\
+            2 & 0.082 (0.001) & 0.079 (0.006) & 0.795 (0.004) & 0.797 (0.019) & 0.079 (0.001) & 0.797 (0.004) \\
+            3 & 0.104 (0.001) & 0.099 (0.006) & 0.775 (0.004) & 0.78 (0.019) & 0.099 (0.001) & 0.78 (0.004) \\
+            4 & 0.124 (0.001) & 0.114 (0.006) & 0.758 (0.004) & 0.767 (0.018) & 0.113 (0.001) & 0.768 (0.004) \\
+            \bottomrule
+        \end{tabular}
+        \caption{Mean (SD) of MSE and $R^2$ for various tree depths for a random forest of 100 trees.}
+        \label{tab:mean_sd_rf}
+    \end{table}
 \end{itemize}
 
 \end{document}
