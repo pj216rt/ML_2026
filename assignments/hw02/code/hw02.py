@@ -9,6 +9,7 @@ from sklearn.metrics import mean_squared_error, r2_score
 from sklearn.linear_model import LinearRegression
 from sklearn.feature_selection import SequentialFeatureSelector
 from sklearn.pipeline import Pipeline
+import time
 
 #reading in the csv file
 df = pd.read_csv('assignments/hw02/data/OnlineNewsPopularity/OnlineNewsPopularity.csv')
@@ -90,8 +91,37 @@ ridge_results = ridge_results.groupby("lambda").agg(
     train_R2_mean=("train_R2", "mean"),
     train_R2_sd=("train_R2", "std"),
     test_mse_mean=("test_mse", "mean"),
-    test_mse_sd=("test_mse", "std")
+    test_mse_sd=("test_mse", "std"),
+    test_R2_mean=("test_R2", "mean"),
+    test_R2_sd=("test_R2", "std"),
+    logdeterm_mean=("logdeterm", "mean")
 )
+
+#plot of average training and test MSE vs Lambda
+plt.figure()
+plt.plot(ridge_results.index.to_numpy(), ridge_results["train_mse_mean"].to_numpy(), label="Training MSE")
+plt.plot(ridge_results.index.to_numpy(), ridge_results["test_mse_mean"].to_numpy(), label="Test MSE")
+plt.xscale("log")
+plt.xlabel("Lambda")
+plt.ylabel("Average MSE")
+plt.title("Average Training and Test MSE vs Lambda")
+plt.legend()
+plt.tight_layout()
+#plt.show()
+plt.savefig("assignments/hw02/figures/train_test_mse.png", dpi=400, bbox_inches="tight")
+plt.close()
+
+#plot of average log determinant vs lambda
+plt.figure()
+plt.plot(ridge_results.index.to_numpy(), ridge_results["logdeterm_mean"].to_numpy(), marker="o")
+plt.xscale("log")
+plt.xlabel("Lambda")
+plt.ylabel("Average determinant")
+plt.title("Average Log Determinent vs Lambda")
+plt.tight_layout()
+#plt.show()
+plt.savefig("assignments/hw02/figures/log_determinant.png", dpi=400, bbox_inches="tight")
+plt.close()
 
 #proof of concept from skilearn documentation
 #for i, (train_index, test_index) in enumerate(cv.split(X)):
@@ -104,12 +134,73 @@ ridge_results = ridge_results.groupby("lambda").agg(
 
 #maybe pipelines? Avoid leaking test set to the train set?
 #https://scikit-learn.org/stable/modules/generated/sklearn.pipeline.Pipeline.html
-k_values = range(5, 30, 5)
+#don't understand them well enough
+
+
+k_values = range(5, 60, 5)
 results = []
 
 for k in k_values:
     print(k)
+
+    training_mse, testing_mse = [], []
+    training_R2, testing_R2 = [], []
+
+    #outer cv split
+    for fold, (train_idx, test_idx) in enumerate(cv.split(X), start=1):
+        print(f"  Fold {fold}/{cv.get_n_splits()}")
+
+        X_train, X_test = X.iloc[train_idx], X.iloc[test_idx]
+        y_train, y_test = Y.iloc[train_idx], Y.iloc[test_idx]
+
+        #feature selection.  What score to use?
+        #R uses R2 by default, so let's do the same
+        #maybe try using n_jobs?
+        feat_select = SequentialFeatureSelector(
+            LinearRegression(),
+            n_features_to_select=k,
+            direction="backward",
+            scoring="r2",
+            cv=None,
+            n_jobs=-1
+        )
+
+        t0 = time.time()
+        feat_select.fit(X_train, y_train)
+        if fold == 1:
+            print(f"k={k}: SFS fit took {time.time() - t0:.2f}s on fold 1")
+
+        #model_fitted = feat_select.fit(X_train, y_train)
+
+        #selected features
+        train_selected = feat_select.transform(X_train)
+        test_selected = feat_select.transform(X_test)
+
+        #fit
+        model_selected = LinearRegression()
+        model_selected.fit(train_selected, y_train)
+
+        y_train_predictions = model_selected.predict(train_selected)
+        y_test_predictions = model_selected.predict(test_selected)
+
+        training_R2.append(r2_score(y_train, y_train_predictions))
+        testing_R2.append(r2_score(y_test, y_test_predictions))
+
+        training_mse.append(mean_squared_error(y_train, y_train_predictions))
+        testing_mse.append(mean_squared_error(y_test, y_test_predictions))
     
+    #store things again
+    results.append({
+        "k": k,
+        "train_r2": np.mean(training_R2),
+        "test_r2": np.mean(testing_R2),
+        "train_mse": np.mean(training_mse),
+        "test_mse": np.mean(testing_mse)
+    })
+
+results_df = pd.DataFrame(results)
+print(results_df)
+
 
 #random forest regression
 depths = range(1, 11)
