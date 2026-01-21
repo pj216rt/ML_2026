@@ -2,13 +2,11 @@ import pandas as pd
 import numpy as np
 from sklearn.ensemble import RandomForestRegressor
 from sklearn.model_selection import KFold, cross_validate
-from sklearn.model_selection import cross_val_score
 from sklearn.dummy import DummyRegressor
 import matplotlib.pyplot as plt
 from sklearn.metrics import mean_squared_error, r2_score
 from sklearn.linear_model import LinearRegression
 from sklearn.feature_selection import SequentialFeatureSelector
-from sklearn.pipeline import Pipeline
 import time
 
 #reading in the csv file
@@ -182,10 +180,6 @@ plt.close()
 #OLS regression with backwards elimination
 #https://scikit-learn.org/stable/modules/generated/sklearn.feature_selection.SequentialFeatureSelector.html
 
-#maybe pipelines?
-#https://scikit-learn.org/stable/modules/generated/sklearn.pipeline.Pipeline.html
-#don't understand them well enough
-
 #note on r2 score:  It can be negative:
 #https://scikit-learn.org/stable/modules/generated/sklearn.metrics.r2_score.html#sklearn-metrics-r2-score
 
@@ -277,7 +271,6 @@ plt.savefig("assignments/hw02/figures/feature_selection_train_test.png", dpi=400
 plt.close()
 
 
-"""
 #random forest regression
 #need to change back to 11
 depths = range(1, 11)
@@ -413,4 +406,3 @@ plt.tight_layout()
 #plt.show()
 plt.savefig("assignments/hw02/figures/train_oob_test_r2.png", dpi=400, bbox_inches="tight")
 plt.close()
-"""
