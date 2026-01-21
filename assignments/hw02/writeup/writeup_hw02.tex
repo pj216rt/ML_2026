@@ -147,6 +147,33 @@ Report results for the following models:
         \label{fig:average_train_test_r2_feat}
     \end{figure}
 
+    The negative test \(R^2\) values are odd, but not  impossible given what \(R^2\) is measuring.  The definition
+    of \(R^2\) is:
+
+    \[
+    R^2 = 1 - \frac{\sum_{i=1}^{n}(y_i-\hat{y}_i)^2}{\sum_{i=1}^{n}(y_i - \bar{y})^2}
+    \]
+
+    For \(R^2\) to be negative, all we need is for \(\frac{\sum_{i=1}^{n}(y_i-\hat{y}_i)^2}{\sum_{i=1}^{n}(y_i - \bar{y})^2}\)
+    to be greater than 1.  In other words, \(\sum_{i=1}^{n}(y_i-\hat{y}_i)^2 > \sum_{i=1}^{n}(y_i - \bar{y})^2\),
+    assuming \(\sum_{i=1}^{n}(y_i - \bar{y})^2 > 0\), which should be appropiate if all \(y_i\) are not 
+    identical (aka if \(\bar{y} = y_i\quad \forall i\)).   
+
+    To demonstrate this more concretely, what if we let all \(\hat{y}\) be a constant \(c\)?  In that case:
+    \[
+    \sum_{i=1}^{n}(y_i-\hat{y}_i)^2 = \sum_{i=1}^{n}(y_i-c)^2
+    \]
+    and if we complete the square, we get:
+    \[
+    \sum_{i=1}^{n}(y_i-c)^2 = \sum_{i=1}^{n}(y_i - \bar{y})^2 + n(\bar{y}-c)^2\]
+    plugging this into the formula for \(R^2\), we get:
+    \[
+    R^2 = 1 - \frac{\sum_{i=1}^{n}(y_i - \bar{y})^2 + n(\bar{y}-c)^2}{\sum_{i=1}^{n}(y_i - \bar{y})^2} = 
+    \frac{-n(\bar{y}-c)^2}{\sum_{i=1}^{n}(y_i - \bar{y})^2}
+    \]
+    This is 0 if \(c=\hat{y}\), negative for any other value of \(c\), and there is no clear bound on how 
+    negative it can go.  In other words, a negative \(R^2\) value is possible if the predictions are far from
+    \(\bar{y}\).  
     \item Random forest regression with 100 trees and maximum depths \(1,2,\dots,10\).  Report the average 
     training, OOB, and test \(R^2\) and MSE and their standard deviations in each case.  Also, plot the average
     training, OOB, and test \(R^2\) vs the maximum depth as three seperate curves.  
