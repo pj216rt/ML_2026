@@ -186,8 +186,10 @@ plt.close()
 #https://scikit-learn.org/stable/modules/generated/sklearn.pipeline.Pipeline.html
 #don't understand them well enough
 
+#note on r2 score:  It can be negative:
+#https://scikit-learn.org/stable/modules/generated/sklearn.metrics.r2_score.html#sklearn-metrics-r2-score
 
-k_values = range(40, 60, 5)
+k_values = range(5, 60, 5)
 results = []
 
 for k in k_values:

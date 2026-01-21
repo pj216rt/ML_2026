@@ -113,7 +113,40 @@ Report results for the following models:
 
     \item OLS regression with backward elimination, for example using SequentialFeatureSelector.  For each number of features \(k\in\{5,10,15,\dots,55\}\)
     report the average training and test \(R^2\) and MSE in a table.  On the same graph, plot the average
-    training and test \(R^2\) vs \(k\) as two seperate cruves
+    training and test \(R^2\) vs \(k\) as two seperate cruves.  
+
+    Doing this, we get table \ref{tab:r2_feature_selection} and figure \ref{fig:average_train_test_r2_feat}.  
+
+    \begin{table}[htbp]
+        \centering
+        \begin{tabular}{ccc}
+            \toprule
+            k & train $R^2$ & test r2 \\
+            \midrule
+            5 & 0.0823 & 0.0806 \\
+            10 & 0.1059 & 0.1032 \\
+            15 & 0.1136 & 0.1112 \\
+            20 & 0.1174 & 0.1137 \\
+            25 & 0.1200 & 0.1156 \\
+            30 & 0.1212 & 0.1164 \\
+            35 & 0.1221 & -1.6069 \\
+            40 & 0.1226 & -1.6933 \\
+            45 & 0.1230 & 0.0895 \\
+            50 & 0.1233 & 0.0562 \\
+            55 & 0.1250 & 0.0877 \\
+            \bottomrule
+        \end{tabular}
+        \caption{Average Training and Test $R^2$ for Backward Feature Selection}
+        \label{tab:r2_feature_selection}
+    \end{table}
+
+    \begin{figure}[htbp]
+        \centering
+        \includegraphics[totalheight=7cm]{../figures/feature_selection_train_test.png}
+        \caption{Average training and test $R^2$ vs $k$.}
+        \label{fig:average_train_test_r2_feat}
+    \end{figure}
+
     \item Random forest regression with 100 trees and maximum depths \(1,2,\dots,10\).  Report the average 
     training, OOB, and test \(R^2\) and MSE and their standard deviations in each case.  Also, plot the average
     training, OOB, and test \(R^2\) vs the maximum depth as three seperate curves.  
