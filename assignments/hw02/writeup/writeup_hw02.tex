@@ -44,23 +44,6 @@
 \begin{document}
 
 \section*{Problem 1}
-In this problem, we use the OnlineNews dataset available on Canvas.  The dataset is
-about predicting the popularity of websites from 58 features.  Discard the first two
-variables from the data.  From the remaining variables use all but the last variable as 
-predictors and the log of the last variable.
-
-Obtain all results using 5-fold cross-validation, which is computed as follows:
-
-\begin{enumerate}
-    \item Generate a random permutation of the data.  Use this randomized permutation to 
-    split the data into 5 disjoint subsets of almost equal size.
-    \item For each fold \(i\in\{1,\dots, 5\}\), train the model on all data except subset \(i\) and test
-    it on subset \(i\), obtaining test error \(\epsilon_i\).
-    \item Obtain the final test error as the average of the 5 test errors \(\epsilon_i\) obtained above.
-\end{enumerate}
-
-Report results for the following models:
-
 \begin{itemize}
     \item Null model.  Report the average train and test MSE of the null model that always predicts training 
     \(\bar{y}\) (average training \(y\))
