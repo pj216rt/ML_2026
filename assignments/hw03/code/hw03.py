@@ -12,9 +12,28 @@ datasets = [
     }
 ]
 
+lamb = 0.001
+iters = 200
+
 #loop over datasets
 for d in datasets:
     print(f"{d['name']}")
+
+    X_train = pd.read_csv(d["X_train"], delim_whitespace=True, header=None)
+    X_valid = pd.read_csv(d["X_valid"], delim_whitespace=True, header=None)
+
+    y_train = pd.read_csv(d["y_train"], header=None).values.ravel()
+    y_valid = pd.read_csv(d["y_valid"], header=None).values.ravel()
+
+    #get N and p
+    N, p = X_train.shape
+
+    #standardize
+    #find function for here
+
+    #loop over the iterations
+    for t in range(iters):
+        break
 
 
 #question 2
