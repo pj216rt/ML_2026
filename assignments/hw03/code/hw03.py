@@ -9,7 +9,14 @@ datasets = [
         "X_train": "assignments/hw03/data/gisette_train.data",
         "y_train": "assignments/hw03/data/gisette_train.labels",
         "X_valid": "assignments/hw03/data/gisette_valid.data",
-        "y_valid": "assignments/hw03/data/gisette_valid.labels",
+        "y_valid": "assignments/hw03/data/gisette_valid.labels"
+    },
+    {
+        "name": "Madelon",
+        "X_train": "assignments/hw03/data/madelon_train.data",
+        "y_train": "assignments/hw03/data/madelon_train.labels",
+        "X_valid": "assignments/hw03/data/madelon_valid.data",
+        "y_valid": "assignments/hw03/data/madelon_valid.labels"
     }
 ]
 
