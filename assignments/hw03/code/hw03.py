@@ -12,7 +12,12 @@ datasets = [
     }
 ]
 
+#loop over datasets
+for d in datasets:
+    print(f"{d['name']}")
 
+
+#question 2
 #only need some of the datasets in the dict
 selected_names = {"Gisette"}
 filtered_datasets = list(filter(lambda da: da["name"] in selected_names, datasets))
@@ -27,6 +32,6 @@ for d in filtered_datasets:
     y_valid = pd.read_csv(d["y_valid"], header=None).values.ravel()
 
 N, p = X_train.shape
-print(N)
+
 #lambda reserved
 lamb = 0.001
