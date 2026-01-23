@@ -1,5 +1,6 @@
 import pandas as pd
 import numpy as np
+from sklearn.preprocessing import StandardScaler
 
 #need to add Dexter dataset
 datasets = [
@@ -29,8 +30,14 @@ for d in datasets:
     N, p = X_train.shape
 
     #standardize
-    #find function for here
+    scaler = StandardScaler()
+    X_train_scaled = scaler.fit_transform(X_train)
+    X_test_scaled = scaler.fit_transform(X_valid)
 
+    #initialize w and create empty vector to store loss values
+    w = np.zeros(p)
+    losses = []
+    
     #loop over the iterations
     for t in range(iters):
         break
