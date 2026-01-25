@@ -46,14 +46,27 @@ for d in datasets:
     X_train_scaled = scaler.fit_transform(X_train)
     X_test_scaled = scaler.transform(X_valid)
 
+    #add column of 1s
+    X_train_tilde = np.column_stack([np.ones(len(X_train)), X_train])
+    X_valid_tilde = np.column_stack([np.ones(len(X_valid)), X_valid])
+
     #initialize w and create empty vector to store loss values
-    w = np.zeros(p)
+    w = np.zeros(p+1)
     losses = []
     
     print("here")
     #loop over the iterations
     for t in range(iters):
-        break
+        z = X_train_tilde @ w 
+
+        #compute log likelihood
+        #z = linear algebra product of X and w, with column of ones added
+        L = np.sum(y_train*z - np.log(1.0 + np.exp(z)))
+
+        #Loss function.  Don't penalize the intercept
+        C = ((-1.0/N)*L) + (lamb*np.dot(w[1:], w[1:]))
+
+        #Gradient of log-likelihood
 
 
 #question 2
