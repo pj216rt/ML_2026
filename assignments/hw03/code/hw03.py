@@ -19,6 +19,11 @@ datasets = [
         "y_train": "assignments/hw03/data/madelon_train.labels",
         "X_valid": "assignments/hw03/data/madelon_valid.data",
         "y_valid": "assignments/hw03/data/madelon_valid.labels"
+    },
+    {
+        "name": "Dexter",
+        "X_train": "assignments/hw03/data/dexter_train.data",
+        "y_train": "assignments/hw03/data/dexter_train.labels"
     }
 ]
 
@@ -26,6 +31,7 @@ lamb = 0.001
 iters = 200
 eta_vals = [1, 0.5, 0.2, 0.1, 0.05, 0.02, 0.01, 0.005, 0.002, 0.001]
 
+#things to find the best eta value
 best_eta = None
 best_final = np.inf
 best_losses = None
@@ -34,8 +40,15 @@ best_w = None
 #Q1
 #loop over datasets
 for d in datasets:
-    print(f"{d['name']}")
+    #get name of dataset
+    name = d["name"]
+    print(name)
 
+    #do something else for the Dexter set
+    if d["name"] == "Dexter":
+        break
+
+    #load in datasets
     X_train = pd.read_csv(d["X_train"], delim_whitespace=True, header=None)
     X_valid = pd.read_csv(d["X_valid"], delim_whitespace=True, header=None)
 
@@ -58,91 +71,76 @@ for d in datasets:
     X_train_tilde = np.column_stack([np.ones(len(X_train_scaled)), X_train_scaled])
     X_valid_tilde = np.column_stack([np.ones(len(X_test_scaled)), X_test_scaled])
 
-    #initialize w and create empty vector to store loss values
-    w = np.zeros(p+1)
-    losses = []
-    
-    print("here")
-    #loop over the iterations
-    for t in range(iters):
-        #get predictor
-        z = X_train_tilde @ w 
+    #store all loss curves for this dataset
+    loss_curves = {}
+    best_eta = None
+    best_final = np.inf
+    best_w = None
 
-        #compute log likelihood
-        #z = linear algebra product of X and w, with column of ones added
-        #https://numpy.org/devdocs/reference/generated/numpy.logaddexp.html
-        L = np.sum(y_train_converted_01*z - np.logaddexp(0.0, z))
+    #loop over the eta values
+    for eta in eta_vals:
+        w = np.zeros(p+1)
+        losses = []
+        prev = np.inf
+        monotone = True
+        
+        print(f"{eta}")
+        #loop over the iterations
+        for t in range(iters):
+            #get predictor
+            z = X_train_tilde @ w 
+            #compute log likelihood
+            #z = linear algebra product of X and w, with column of ones added
+            #https://numpy.org/devdocs/reference/generated/numpy.logaddexp.html
+            L = np.sum(y_train_converted_01*z - np.logaddexp(0.0, z))
+            
+            #Loss function.  
+            #C = ((-1.0/N)*L) + (lamb*np.dot(w[1:], w[1:]))
+            C = ((-1.0/N)*L) + (lamb*np.dot(w, w))
+            losses.append(C)
+            
+            #checking to see if the loss is monotone decreasing
+            if t > 0 and C > prev + 1e-12:
+                  monotone = False
+                  break
+            prev = C
+            
+            exponential_term = np.exp(-np.logaddexp(0.0, -z))
+            gradient_L = X_train_tilde.T @ (y_train_converted_01 - exponential_term)
+            
+            #update w
+            w = w - eta*lamb*w + (eta/N)*gradient_L
 
-        #Loss function.  
-        #C = ((-1.0/N)*L) + (lamb*np.dot(w[1:], w[1:]))
-        C = ((-1.0/N)*L) + (lamb*np.dot(w, w))
-        losses.append(C)
+        #check if the series of loss scores is monotone decreasing and that the
+        #length is correct
+        if monotone and len(losses) == iters:
+            losses = np.array(losses)
+            loss_curves[eta] = losses
+            
+            if losses[-1] < best_final:
+                best_final = losses[-1]
+                best_eta = eta
+                best_w = w.copy()
 
-        #Gradient of log-likelihood
-        #exponential_term = np.exp(z)/(1.0 + np.exp(z))
-        exponential_term = np.exp(-np.logaddexp(0.0, -z))
-        gradient_L = X_train_tilde.T @ (y_train_converted_01 - exponential_term)
-
-        #update w
-        #don't penalize the intercept term
-        #add eta*lamb back
-        w = w - eta*lamb*w + (eta/N)*gradient_L
-        #w[0] += eta*lamb*w[0]
+    print(f"Best eta for {name}: {best_eta} (final loss {best_final:.6f})")
     
     plt.figure()
-    plt.plot(np.arange(1, iters + 1), losses)
-    plt.xlabel("Iteration")
-    plt.ylabel("Training loss C(w)")
-    plt.title("Loss vs. Iteration")
-    plt.show()
-
-        
-
-for eta in eta_vals:
-    w = np.zeros(p+1)
-    losses = []
-    prev = np.inf
-
-    print("here")
-    #loop over the iterations
-    for t in range(iters):
-        #get predictor
-        z = X_train_tilde @ w 
-
-        #compute log likelihood
-        #z = linear algebra product of X and w, with column of ones added
-        #https://numpy.org/devdocs/reference/generated/numpy.logaddexp.html
-        L = np.sum(y_train_converted_01*z - np.logaddexp(0.0, z))
-
-        #Loss function.  
-        #C = ((-1.0/N)*L) + (lamb*np.dot(w[1:], w[1:]))
-        C = ((-1.0/N)*L) + (lamb*np.dot(w, w))
-        losses.append(C)
-
-        #checking to see if the loss is monotone decreasing
-        if t > 0 and C > prev + 1e-12:
-            losses = None
-            break
-        prev = C
-
-        exponential_term = np.exp(-np.logaddexp(0.0, -z))
-        gradient_L = X_train_tilde.T @ (y_train_converted_01 - exponential_term)
-
-        #update w
-        #don't penalize the intercept term
-        #add eta*lamb back
-        w = w - eta*lamb*w + (eta/N)*gradient_L
-
     
-    if losses is not None and losses[-1] < best_final:
-        #get the last loss value and the best eta
-        best_final = losses[-1]
-        best_eta = eta
-        
-print("best_eta:", best_eta, "final_loss:", best_final)
-
-
-
+    for eta, curve in loss_curves.items():
+        if eta == best_eta:
+            plt.plot(np.arange(1, iters + 1), curve, linewidth=3,
+                     alpha=1.0, label=rf"$\eta={eta}$ (best)")
+        else:
+            plt.plot(np.arange(1, iters + 1), curve, linewidth=1.2,
+                     alpha=0.35, label=rf"$\eta={eta}$")
+            
+    plt.xlabel("Iteration")
+    plt.ylabel("Training loss $C(w)$")
+    plt.title(rf"{name} Training Loss, different $\eta$")
+    plt.legend()
+    plt.grid(alpha=0.25)
+    plt.tight_layout()
+    plt.show()
 
 
 #question 2
