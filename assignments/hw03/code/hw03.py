@@ -24,8 +24,12 @@ datasets = [
 
 lamb = 0.001
 iters = 200
+eta_vals = [1, 0.5, 0.2, 0.1, 0.05, 0.02, 0.01, 0.005, 0.002, 0.001]
 
-#need to define the loss function
+best_eta = None
+best_final = np.inf
+best_losses = None
+best_w = None
 
 #Q1
 #loop over datasets
@@ -38,6 +42,10 @@ for d in datasets:
     y_train = pd.read_csv(d["y_train"], header=None).values.ravel()
     y_valid = pd.read_csv(d["y_valid"], header=None).values.ravel()
 
+    #convert to 0/1
+    y_train_converted_01 = (y_train == 1).astype(int)
+    y_valid_converted_01 = (y_valid == 1).astype(int)
+
     #get N and p
     N, p = X_train.shape
 
@@ -47,8 +55,8 @@ for d in datasets:
     X_test_scaled = scaler.transform(X_valid)
 
     #add column of 1s
-    X_train_tilde = np.column_stack([np.ones(len(X_train)), X_train])
-    X_valid_tilde = np.column_stack([np.ones(len(X_valid)), X_valid])
+    X_train_tilde = np.column_stack([np.ones(len(X_train_scaled)), X_train_scaled])
+    X_valid_tilde = np.column_stack([np.ones(len(X_test_scaled)), X_test_scaled])
 
     #initialize w and create empty vector to store loss values
     w = np.zeros(p+1)
@@ -57,16 +65,84 @@ for d in datasets:
     print("here")
     #loop over the iterations
     for t in range(iters):
+        #get predictor
         z = X_train_tilde @ w 
 
         #compute log likelihood
         #z = linear algebra product of X and w, with column of ones added
-        L = np.sum(y_train*z - np.log(1.0 + np.exp(z)))
+        #https://numpy.org/devdocs/reference/generated/numpy.logaddexp.html
+        L = np.sum(y_train_converted_01*z - np.logaddexp(0.0, z))
 
-        #Loss function.  Don't penalize the intercept
-        C = ((-1.0/N)*L) + (lamb*np.dot(w[1:], w[1:]))
+        #Loss function.  
+        #C = ((-1.0/N)*L) + (lamb*np.dot(w[1:], w[1:]))
+        C = ((-1.0/N)*L) + (lamb*np.dot(w, w))
+        losses.append(C)
 
         #Gradient of log-likelihood
+        #exponential_term = np.exp(z)/(1.0 + np.exp(z))
+        exponential_term = np.exp(-np.logaddexp(0.0, -z))
+        gradient_L = X_train_tilde.T @ (y_train_converted_01 - exponential_term)
+
+        #update w
+        #don't penalize the intercept term
+        #add eta*lamb back
+        w = w - eta*lamb*w + (eta/N)*gradient_L
+        #w[0] += eta*lamb*w[0]
+    
+    plt.figure()
+    plt.plot(np.arange(1, iters + 1), losses)
+    plt.xlabel("Iteration")
+    plt.ylabel("Training loss C(w)")
+    plt.title("Loss vs. Iteration")
+    plt.show()
+
+        
+
+for eta in eta_vals:
+    w = np.zeros(p+1)
+    losses = []
+    prev = np.inf
+
+    print("here")
+    #loop over the iterations
+    for t in range(iters):
+        #get predictor
+        z = X_train_tilde @ w 
+
+        #compute log likelihood
+        #z = linear algebra product of X and w, with column of ones added
+        #https://numpy.org/devdocs/reference/generated/numpy.logaddexp.html
+        L = np.sum(y_train_converted_01*z - np.logaddexp(0.0, z))
+
+        #Loss function.  
+        #C = ((-1.0/N)*L) + (lamb*np.dot(w[1:], w[1:]))
+        C = ((-1.0/N)*L) + (lamb*np.dot(w, w))
+        losses.append(C)
+
+        #checking to see if the loss is monotone decreasing
+        if t > 0 and C > prev + 1e-12:
+            losses = None
+            break
+        prev = C
+
+        exponential_term = np.exp(-np.logaddexp(0.0, -z))
+        gradient_L = X_train_tilde.T @ (y_train_converted_01 - exponential_term)
+
+        #update w
+        #don't penalize the intercept term
+        #add eta*lamb back
+        w = w - eta*lamb*w + (eta/N)*gradient_L
+
+    
+    if losses is not None and losses[-1] < best_final:
+        #get the last loss value and the best eta
+        best_final = losses[-1]
+        best_eta = eta
+        
+print("best_eta:", best_eta, "final_loss:", best_final)
+
+
+
 
 
 #question 2
