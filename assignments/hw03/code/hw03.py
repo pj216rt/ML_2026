@@ -274,13 +274,15 @@ for d in filtered_datasets:
 
     LATEX_table = results_df.to_latex(
     index=False,
-    caption="Train and Test Misclassification Errors",
-    label="tab:train_test_missclass_errors_hw03",
+    caption=None,
+    label=None,
     column_format="c" * results_df.shape[1],
     escape=False
     )
     
-    print(LATEX_table)
+    #save LATEX table
+    with open("assignments/hw03/output/q2_table.tex", "w") as f:
+        f.write(LATEX_table)
 
     #ROC curves
     #https://scikit-learn.org/stable/modules/generated/sklearn.metrics.roc_curve.html
@@ -304,6 +306,8 @@ for d in filtered_datasets:
     plt.ylabel("True Positive Rate")
     plt.title(f"{d['name']}: ROC Comparison: Logistic vs Ridge")
     plt.legend()
-    plt.show()
+    plt.savefig("assignments/hw03/figures/q2_roc_plot.png", dpi=400, bbox_inches="tight")
+    plt.close()
+    #plt.show()
 
-#can we augment w?
+    
