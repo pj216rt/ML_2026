@@ -45,9 +45,18 @@
 
 \section*{Problem 1}
 \begin{itemize}
-    \item Null model:
+    \item Need to minimize the following:
     \[
-    L(w) = \sum_{j=1}^{n}y_j(w_0 + \sum_{i=1}^{p}w_ix_{ji}) - ln(1+ exp(w_0 + \sum_{i=1}^{p}w_ix_{ji}))
+    C(\boldsymbol{\omega}) = -\frac{1}{N}L(\boldsymbol{\omega}) + \lambda\boldsymbol{\omega}^T\boldsymbol{\omega}
+    \]
+    where 
+    \[
+    L(\omega) = \sum_{j=1}^{n}y_j(w_0 + \sum_{i=1}^{p}w_ix_{ji}) - ln(1+ exp(w_0 + \sum_{i=1}^{p}w_ix_{ji}))
+    \]
+    We minimize this loss using gradient descent, using:
+    \[
+    \boldsymbol{w}^{t+1}\leftarrow \boldsymbol{\omega}^{t} - \eta\lambda\boldsymbol{\omega}^{t} + 
+    \frac{\eta}{N}\frac{\partial L(\boldsymbol{\omega}^{t})}{\partial \boldsymbol{\omega}}
     \]
 
     According to the notes, we basically do an Odds ratio decision rule:
@@ -61,9 +70,35 @@
 \end{itemize}
 
 \section*{Problem 2}
+We need to minimize analytically:
+    \[
+    C(\boldsymbol{\omega}) = \frac{1}{N}\sum_{i=1}^{n}\left(y_i - 
+    \boldsymbol{\omega}^T\boldsymbol{x}_i - \omega_0\right)^2 + 
+    \lambda\left(\boldsymbol{\omega}^T\boldsymbol{\omega} + \omega_0^2\right)
+    \]
+    where $\lambda$ = 0.001, $(\boldsymbol{x_i}, y_i)$ are the training data, and \(y_i\in\{-1,+1\}\).
+    Predict classification via \(\hat{y} = \text{sign}(\boldsymbol{\omega}^T\boldsymbol{x} + \omega_0)\).
 \begin{itemize}
-    \item asdf
-    \item aghjk
+    \item We can report the misclassification error of the training and test datasets in the following table:
+    \begin{table}[htbp]
+        \centering
+        \input{../output/q2_table.tex}
+        \caption{misclassification Error for training and test datasets, Ridge like regression}
+        \label{tab:ridge_classification}
+    \end{table}
+
+    The train misclassification error rate is the same (0.00), though the test error rate is
+    higher (0.091 vs. 0.020).
+    \item We can display the ROC curve for both the ridge and logistic models in figure \ref{fig:q2_roc}.
+    \begin{figure}[htbp]
+        \centering
+        \includegraphics[totalheight=7cm]{../figures/q2_roc_plot.png}
+        \caption{Average log determinant vs Lambda.}
+        \label{fig:q2_roc}
+    \end{figure}
+
+    The train ROC for the logistic and ridge models are practically the same.  The ROC for the logistic model
+    is better than the ridge though; tighter to the upper left hand corner.  
 \end{itemize}
 
 \end{document}

@@ -34,10 +34,12 @@ datasets = [
     }
 ]
 
+#assignment specific parameters + number of iterations + some possible learning rates
 lamb = 0.001
 iters = 200
 eta_vals = [4, 2, 1, 0.5, 0.2, 0.1, 0.05, 0.02, 0.01, 0.005, 0.002, 0.001]
 
+#store final results for the summary table + store the ROC curves
 results = []
 roc_store = {}
 
@@ -48,7 +50,7 @@ for d in datasets:
     name = d["name"]
     print(name)
 
-    #use default read.csv if Dexter dataset
+    #Load datasets.  use default read.csv if Dexter dataset
     if name == "Dexter":
         X_train = pd.read_csv(d["X_train"], header=None)
         X_valid = pd.read_csv(d["X_valid"], header=None)
@@ -59,7 +61,7 @@ for d in datasets:
     y_train = pd.read_csv(d["y_train"], header=None).values.ravel()
     y_valid = pd.read_csv(d["y_valid"], header=None).values.ravel()
 
-    #convert to 0/1
+    #convert labels to 0/1 for likelihood to work
     y_train_converted_01 = (y_train == 1).astype(int)
     y_valid_converted_01 = (y_valid == 1).astype(int)
 
@@ -71,7 +73,7 @@ for d in datasets:
     X_train_scaled = scaler.fit_transform(X_train)
     X_test_scaled = scaler.transform(X_valid)
 
-    #add column of 1s
+    #add column of 1s to augment w
     X_train_tilde = np.column_stack([np.ones(len(X_train_scaled)), X_train_scaled])
     X_valid_tilde = np.column_stack([np.ones(len(X_test_scaled)), X_test_scaled])
 
@@ -83,8 +85,11 @@ for d in datasets:
 
     #loop over the eta values
     for eta in eta_vals:
+        #set everything to 0 initially
         w = np.zeros(p+1)
         losses = []
+
+        #checks for if loss is decreasing at each iteration
         prev = np.inf
         monotone = True
         
@@ -92,14 +97,14 @@ for d in datasets:
         #loop over the iterations
         for t in range(iters):
             #get predictor
-            z = X_train_tilde @ w 
+            z = X_train_tilde @ w
+
             #compute log likelihood
             #z = linear algebra product of X and w, with column of ones added
             #https://numpy.org/devdocs/reference/generated/numpy.logaddexp.html
             L = np.sum(y_train_converted_01*z - np.logaddexp(0.0, z))
             
             #Loss function.  
-            #C = ((-1.0/N)*L) + (lamb*np.dot(w[1:], w[1:]))
             C = ((-1.0/N)*L) + (lamb*np.dot(w, w))
             losses.append(C)
             
@@ -109,6 +114,7 @@ for d in datasets:
                   break
             prev = C
             
+            #get the gradient of the log likelihood
             exponential_term = np.exp(-np.logaddexp(0.0, -z))
             gradient_L = X_train_tilde.T @ (y_train_converted_01 - exponential_term)
             
@@ -262,14 +268,10 @@ for d in filtered_datasets:
     train_misclass = np.mean(yhat_train != y_train)
     test_misclass  = np.mean(yhat_test != y_valid)
 
-    print(f"Train misclassification error: {train_misclass:.4f}")
-    print(f"Test misclassification error:  {test_misclass:.4f}")
-
     #get this into a latex table?
     results_df = pd.DataFrame([{
-        "lambda": lamb,
-        "train_misclass_error": train_misclass,
-        "test_misclass_error": test_misclass,
+        "train misclass error": train_misclass,
+        "test misclass error": test_misclass,
     }])
 
     LATEX_table = results_df.to_latex(
@@ -310,4 +312,3 @@ for d in filtered_datasets:
     plt.close()
     #plt.show()
 
-    
