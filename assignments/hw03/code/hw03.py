@@ -21,7 +21,7 @@ datasets = [
         "X_valid": "assignments/hw03/data/madelon_valid.data",
         "y_valid": "assignments/hw03/data/madelon_valid.labels",
         "eta_out": "assignments/hw03/figures/madelon_eta_plot.png",
-        "roc_out": "assignments/hw03/figures/gisette_roc_plot.png",
+        "roc_out": "assignments/hw03/figures/madelon_roc_plot.png",
     },
     {
         "name": "Dexter",
@@ -36,7 +36,7 @@ datasets = [
 
 lamb = 0.001
 iters = 200
-eta_vals = [1, 0.5, 0.2, 0.1, 0.05, 0.02, 0.01, 0.005, 0.002, 0.001]
+eta_vals = [4, 2, 1, 0.5, 0.2, 0.1, 0.05, 0.02, 0.01, 0.005, 0.002, 0.001]
 
 results = []
 
@@ -125,8 +125,6 @@ for d in datasets:
                 best_eta = eta
                 best_w = w.copy()
 
-    print(f"Best eta for {name}: {best_eta} (final loss {best_final:.6f})")
-
     #figure showing Loss vs iteration
     plt.figure()
     
@@ -173,9 +171,6 @@ for d in datasets:
     train_err = np.mean(yhat_train != y_train_converted_01)
     test_err = np.mean(yhat_test != y_valid_converted_01)
 
-    print(f"Train misclassification error: {train_err:.4f}")
-    print(f"Test misclassification error: {test_err:.4f}")
-
     #get ROC 
     fpr_train, tpr_train, thresholds_train = roc_curve(y_train, p_train_1)
     fpr_test, tpr_test, thresholds_test = roc_curve(y_valid, p_test_1)
@@ -197,22 +192,24 @@ for d in datasets:
     #need to add results 
     results.append({
         "dataset": name,
-        "best_eta": best_eta,
-        "train_misclass": train_err,
-        "test_misclass": test_err,
+        "best eta": best_eta,
+        "train misclass": train_err,
+        "test misclass": test_err,
     })
 
 #print results table
 results_df = pd.DataFrame(results)
 LATEX_table = results_df.to_latex(
     index=False,
-    caption="Best learning rate $\\eta$ and corresponding training and test misclassification error for logistic regression.",
-    label="tab:logreg_misclass",
+    caption=None,
+    label=None,
     column_format="c" * results_df.shape[1],
     escape=False
 )
 
-print(LATEX_table)
+#save latex table
+with open("assignments/hw03/output/logreg_misclass_table.tex", "w") as f:
+    f.write(LATEX_table)
 
 #question 2
 #only need some of the datasets in the dict
