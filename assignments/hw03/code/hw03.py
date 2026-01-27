@@ -4,26 +4,33 @@ from sklearn.preprocessing import StandardScaler
 from sklearn.metrics import roc_curve
 import matplotlib.pyplot as plt
 
-#need to add Dexter dataset
 datasets = [
     {
         "name": "Gisette",
         "X_train": "assignments/hw03/data/gisette_train.data",
         "y_train": "assignments/hw03/data/gisette_train.labels",
         "X_valid": "assignments/hw03/data/gisette_valid.data",
-        "y_valid": "assignments/hw03/data/gisette_valid.labels"
+        "y_valid": "assignments/hw03/data/gisette_valid.labels",
+        "eta_out": "assignments/hw03/figures/gisette_eta_plot.png",
+        "roc_out": "assignments/hw03/figures/gisette_roc_plot.png",
     },
     {
         "name": "Madelon",
         "X_train": "assignments/hw03/data/madelon_train.data",
         "y_train": "assignments/hw03/data/madelon_train.labels",
         "X_valid": "assignments/hw03/data/madelon_valid.data",
-        "y_valid": "assignments/hw03/data/madelon_valid.labels"
+        "y_valid": "assignments/hw03/data/madelon_valid.labels",
+        "eta_out": "assignments/hw03/figures/madelon_eta_plot.png",
+        "roc_out": "assignments/hw03/figures/gisette_roc_plot.png",
     },
     {
         "name": "Dexter",
-        "X_train": "assignments/hw03/data/dexter_train.data",
-        "y_train": "assignments/hw03/data/dexter_train.labels"
+        "X_train": "assignments/hw03/data/dexter_train.csv",
+        "y_train": "assignments/hw03/data/dexter_train.labels",
+        "X_valid": "assignments/hw03/data/dexter_valid.csv",
+        "y_valid": "assignments/hw03/data/dexter_valid.labels",
+        "eta_out": "assignments/hw03/figures/dexter_eta_plot.png",
+        "roc_out": "assignments/hw03/figures/dexter_roc_plot.png",
     }
 ]
 
@@ -31,11 +38,7 @@ lamb = 0.001
 iters = 200
 eta_vals = [1, 0.5, 0.2, 0.1, 0.05, 0.02, 0.01, 0.005, 0.002, 0.001]
 
-#things to find the best eta value
-best_eta = None
-best_final = np.inf
-best_losses = None
-best_w = None
+results = []
 
 #Q1
 #loop over datasets
@@ -44,14 +47,14 @@ for d in datasets:
     name = d["name"]
     print(name)
 
-    #do something else for the Dexter set
-    if d["name"] == "Dexter":
-        break
-
-    #load in datasets
-    X_train = pd.read_csv(d["X_train"], delim_whitespace=True, header=None)
-    X_valid = pd.read_csv(d["X_valid"], delim_whitespace=True, header=None)
-
+    #use default read.csv if Dexter dataset
+    if name == "Dexter":
+        X_train = pd.read_csv(d["X_train"], header=None)
+        X_valid = pd.read_csv(d["X_valid"], header=None)
+    else:
+        X_train = pd.read_csv(d["X_train"], delim_whitespace=True, header=None)
+        X_valid = pd.read_csv(d["X_valid"], delim_whitespace=True, header=None)
+    
     y_train = pd.read_csv(d["y_train"], header=None).values.ravel()
     y_valid = pd.read_csv(d["y_valid"], header=None).values.ravel()
 
@@ -123,7 +126,8 @@ for d in datasets:
                 best_w = w.copy()
 
     print(f"Best eta for {name}: {best_eta} (final loss {best_final:.6f})")
-    
+
+    #figure showing Loss vs iteration
     plt.figure()
     
     for eta, curve in loss_curves.items():
@@ -140,8 +144,75 @@ for d in datasets:
     plt.legend()
     plt.grid(alpha=0.25)
     plt.tight_layout()
-    plt.show()
+    plt.savefig(d["eta_out"], dpi=400, bbox_inches="tight")
+    plt.close()
+    #plt.show()
 
+    #making predictions
+    #making predictions for training set
+    z_train = X_train_tilde @ best_w
+    z_test = X_valid_tilde @ best_w
+
+    #get probabilities for 1 and 0
+    p_train_1 = np.exp(-np.logaddexp(0.0, -z_train))
+    p_train_0 = np.exp(-np.logaddexp(0.0, z_train))
+
+    p_test_1 = np.exp(-np.logaddexp(0.0, -z_test))
+    p_test_0 = np.exp(-np.logaddexp(0.0, z_test))
+
+    #compute the odds of train and test
+    odds_train = p_train_1/p_train_0
+    odds_test = p_test_1/p_test_0
+
+    #make predictions.  Predcit 1 if Odds > 1
+    #as.int makes things nicer
+    yhat_train = (odds_train > 1.0).astype(int)
+    yhat_test = (odds_test > 1.0).astype(int)
+
+    #misclassification error
+    train_err = np.mean(yhat_train != y_train_converted_01)
+    test_err = np.mean(yhat_test != y_valid_converted_01)
+
+    print(f"Train misclassification error: {train_err:.4f}")
+    print(f"Test misclassification error: {test_err:.4f}")
+
+    #get ROC 
+    fpr_train, tpr_train, thresholds_train = roc_curve(y_train, p_train_1)
+    fpr_test, tpr_test, thresholds_test = roc_curve(y_valid, p_test_1)
+
+    #plot these
+    plt.figure()
+    plt.plot(fpr_train, tpr_train, label="Train ROC")
+    plt.plot(fpr_test, tpr_test, label="Test ROC")
+    plt.plot([0, 1], [0, 1], linestyle="--", label="Random Classifier")
+    plt.xlabel("False Positive Rate")
+    plt.ylabel("True Positive Rate")
+    plt.title(rf"{d['name']}: ROC curve (best $\eta$ = {best_eta})")
+    plt.legend()
+    plt.tight_layout()
+    plt.savefig(d["roc_out"], dpi=400, bbox_inches="tight")
+    plt.close()
+    #plt.show()
+
+    #need to add results 
+    results.append({
+        "dataset": name,
+        "best_eta": best_eta,
+        "train_misclass": train_err,
+        "test_misclass": test_err,
+    })
+
+#print results table
+results_df = pd.DataFrame(results)
+LATEX_table = results_df.to_latex(
+    index=False,
+    caption="Best learning rate $\\eta$ and corresponding training and test misclassification error for logistic regression.",
+    label="tab:logreg_misclass",
+    column_format="c" * results_df.shape[1],
+    escape=False
+)
+
+print(LATEX_table)
 
 #question 2
 #only need some of the datasets in the dict
