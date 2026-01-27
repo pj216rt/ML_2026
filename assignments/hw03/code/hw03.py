@@ -39,6 +39,7 @@ iters = 200
 eta_vals = [4, 2, 1, 0.5, 0.2, 0.1, 0.05, 0.02, 0.01, 0.005, 0.002, 0.001]
 
 results = []
+roc_store = {}
 
 #Q1
 #loop over datasets
@@ -175,6 +176,13 @@ for d in datasets:
     fpr_train, tpr_train, thresholds_train = roc_curve(y_train, p_train_1)
     fpr_test, tpr_test, thresholds_test = roc_curve(y_valid, p_test_1)
 
+    #save Gisette data for Q2
+    if name == "Gisette":
+        roc_store[name] = {
+            "train": (fpr_train, tpr_train),
+            "test": (fpr_test, tpr_test)
+        }
+
     #plot these
     plt.figure()
     plt.plot(fpr_train, tpr_train, label="Train ROC")
@@ -281,12 +289,20 @@ for d in filtered_datasets:
 
     #need to find a way to plot this and the result from Q1
     plt.figure()
-    plt.plot(fpr_train, tpr_train, label="Train ROC")
-    plt.plot(fpr_test, tpr_test, label="Test ROC")
+    plt.plot(fpr_train, tpr_train, label="Ridge Train ROC")
+    plt.plot(fpr_test, tpr_test, label="Ridge Test ROC")
+
+    #need to overlay the Q1 Gisette portion
+    fpr_train_q1, tpr_train_q1 = roc_store["Gisette"]["train"]
+    fpr_test_q1, tpr_test_q1 = roc_store["Gisette"]["test"]
+
+    plt.plot(fpr_train_q1, tpr_train_q1, linestyle=":", label="Logistic Train ROC")
+    plt.plot(fpr_test_q1, tpr_test_q1, linestyle=":", label="Logistic Test ROC")
+
     plt.plot([0, 1], [0, 1], linestyle="--", label="Random Classifier")
     plt.xlabel("False Positive Rate")
     plt.ylabel("True Positive Rate")
-    plt.title(f"{d['name']}: Ridge (squared loss) ROC")
+    plt.title(f"{d['name']}: ROC Comparison: Logistic vs Ridge")
     plt.legend()
     plt.show()
 
