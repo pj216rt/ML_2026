@@ -112,7 +112,7 @@
             \includegraphics[width=\linewidth]{../figures/dexter_eta_plot.png}
             \caption{Dexter: training loss vs.\ iteration for multiple \(\eta\) values.}
         \end{subfigure}
-        \caption{Two images on top, one below.}
+        \caption{Training losses vs. iteration for logistic regression across possible learning rates \(\eta\).}
         \label{fig:three_2plus1}
     \end{figure}
     We then report the misclassification error rates for the train and test datasets for the three datasets.
@@ -131,34 +131,44 @@
         \begin{subfigure}{0.45\textwidth}
             \centering
             \includegraphics[width=\linewidth]{../figures/gisette_roc_plot.png}
-            \caption{Top left}
+            \caption{Gisette: training and test ROC curves for best \(\eta\).}
         \end{subfigure}
         \hfill
         \begin{subfigure}{0.45\textwidth}
             \centering
             \includegraphics[width=\linewidth]{../figures/madelon_roc_plot.png}
-            \caption{Top right}
+            \caption{Madelon: training and test ROC curves for best \(\eta\).}
         \end{subfigure}\
         \vspace{0.5em}
         \begin{subfigure}{0.45\textwidth}
             \centering
             \includegraphics[width=\linewidth]{../figures/dexter_roc_plot.png}
-            \caption{Bottom}
+            \caption{Dexter: training and test ROC curves for best \(\eta\).}
         \end{subfigure}
-        \caption{Two images on top, one below.}
+        \caption{ROC curves for logistic regression on the training and test sets for each dataset.}
         \label{fig:three_2plus1_2}
     \end{figure}
 \end{itemize}
 
 \section*{Problem 2}
 We need to minimize analytically:
-    \[
-    C(\boldsymbol{\omega}) = \frac{1}{N}\sum_{i=1}^{n}\left(y_i - 
-    \boldsymbol{\omega}^T\boldsymbol{x}_i - \omega_0\right)^2 + 
-    \lambda\left(\boldsymbol{\omega}^T\boldsymbol{\omega} + \omega_0^2\right)
-    \]
-    where $\lambda$ = 0.001, $(\boldsymbol{x_i}, y_i)$ are the training data, and \(y_i\in\{-1,+1\}\).
-    Predict classification via \(\hat{y} = \text{sign}(\boldsymbol{\omega}^T\boldsymbol{x} + \omega_0)\).
+\[
+C(\boldsymbol{\omega}) = \frac{1}{N}\sum_{i=1}^{n}\left(y_i - 
+\boldsymbol{\omega}^T\boldsymbol{x}_i - \omega_0\right)^2 + 
+\lambda\left(\boldsymbol{\omega}^T\boldsymbol{\omega} + \omega_0^2\right)
+\]
+where $\lambda$ = 0.001, $(\boldsymbol{x_i}, y_i)$ are the training data, and \(y_i\in\{-1,+1\}\).
+Predict classification via \(\hat{y} = \text{sign}(\boldsymbol{\omega}^T\boldsymbol{x} + \omega_0)\).
+
+If we define the augmented covariate vector and parameter vector as in question 1, then we can write the minimization
+function as 
+\[
+C(\tilde{\boldsymbol{\omega}})
+= \frac{1}{N}\|\boldsymbol{y} - \tilde{\boldsymbol{X}}\tilde{\boldsymbol{\omega}}\|^2
++ \lambda \|\tilde{\boldsymbol{\omega}}\|^2.
+\]
+We can take derivatives with respect to 
+
 \begin{itemize}
     \item We can report the misclassification error of the training and test datasets in the following table:
     \begin{table}[htbp]
