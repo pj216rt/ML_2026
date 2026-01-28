@@ -178,7 +178,7 @@ for d in datasets:
     train_err = np.mean(yhat_train != y_train_converted_01)
     test_err = np.mean(yhat_test != y_valid_converted_01)
 
-    #get ROC 
+    #get ROC curves
     fpr_train, tpr_train, thresholds_train = roc_curve(y_train, p_train_1)
     fpr_test, tpr_test, thresholds_test = roc_curve(y_valid, p_test_1)
 
@@ -189,7 +189,7 @@ for d in datasets:
             "test": (fpr_test, tpr_test)
         }
 
-    #plot these
+    #plot these and save in figures folder 
     plt.figure()
     plt.plot(fpr_train, tpr_train, label="Train ROC")
     plt.plot(fpr_test, tpr_test, label="Test ROC")

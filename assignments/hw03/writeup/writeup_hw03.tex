@@ -58,8 +58,33 @@
     \boldsymbol{w}^{t+1}\leftarrow \boldsymbol{\omega}^{t} - \eta\lambda\boldsymbol{\omega}^{t} + 
     \frac{\eta}{N}\frac{\partial L(\boldsymbol{\omega}^{t})}{\partial \boldsymbol{\omega}}
     \]
-
-    According to the notes, we basically do an Odds ratio decision rule:
+    For each of the three datasets, we do the same thing.  We first find a learning rate \(\eta\) that permit
+    the loss to converge in at most 200 iterations.  We loop over a grid to find the best \(\eta\) (in terms 
+    of smallest final training lose), and obtain the plots shown in figure \ref{fig:three_2plus1}.
+    \begin{figure}[htbp]
+        \centering
+        \begin{subfigure}{0.45\textwidth}
+            \centering
+            \includegraphics[width=\linewidth]{../figures/gisette_eta_plot.png}
+            \caption{Top left}
+        \end{subfigure}
+        \hfill
+        \begin{subfigure}{0.45\textwidth}
+            \centering
+            \includegraphics[width=\linewidth]{../figures/madelon_eta_plot.png}
+            \caption{Top right}
+        \end{subfigure}\
+        \vspace{0.5em}
+        \begin{subfigure}{0.45\textwidth}
+            \centering
+            \includegraphics[width=\linewidth]{../figures/dexter_eta_plot.png}
+            \caption{Bottom}
+        \end{subfigure}
+        \caption{Two images on top, one below.}
+        \label{fig:three_2plus1}
+    \end{figure}
+    We then report the misclassification error rates for the train and test datasets for the three datasets.
+    This is reported in \ref{tab:logreg_misclass}.  
 
     \begin{table}[htbp]
         \centering
@@ -67,6 +92,30 @@
         \caption{Best learning rate $\eta$, training and test misclassification error, Logistic Regression.}
         \label{tab:logreg_misclass}
     \end{table}
+    Lastly, we are asked to plot the ROC curve of both the training and test sets.  We do so in figure 
+    \ref{fig:three_2plus1_2}
+    \begin{figure}[htbp]
+        \centering
+        \begin{subfigure}{0.45\textwidth}
+            \centering
+            \includegraphics[width=\linewidth]{../figures/gisette_roc_plot.png}
+            \caption{Top left}
+        \end{subfigure}
+        \hfill
+        \begin{subfigure}{0.45\textwidth}
+            \centering
+            \includegraphics[width=\linewidth]{../figures/madelon_roc_plot.png}
+            \caption{Top right}
+        \end{subfigure}\
+        \vspace{0.5em}
+        \begin{subfigure}{0.45\textwidth}
+            \centering
+            \includegraphics[width=\linewidth]{../figures/dexter_roc_plot.png}
+            \caption{Bottom}
+        \end{subfigure}
+        \caption{Two images on top, one below.}
+        \label{fig:three_2plus1_2}
+    \end{figure}
 \end{itemize}
 
 \section*{Problem 2}
@@ -93,7 +142,7 @@ We need to minimize analytically:
     \begin{figure}[htbp]
         \centering
         \includegraphics[totalheight=7cm]{../figures/q2_roc_plot.png}
-        \caption{Average log determinant vs Lambda.}
+        \caption{abcd.}
         \label{fig:q2_roc}
     \end{figure}
 
