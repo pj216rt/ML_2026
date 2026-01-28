@@ -51,34 +51,66 @@
     \]
     where 
     \[
-    L(\omega) = \sum_{j=1}^{n}y_j(w_0 + \sum_{i=1}^{p}w_ix_{ji}) - ln(1+ exp(w_0 + \sum_{i=1}^{p}w_ix_{ji}))
+    L(\boldsymbol{\omega}) = \sum_{j=1}^{n}y_j(\omega_0 + \sum_{i=1}^{p}\omega_ix_{ji}) - 
+    ln(1+ exp(\omega_0 + \sum_{i=1}^{p}\omega_ix_{ji}))
     \]
     We minimize this loss using gradient descent, using:
     \[
     \boldsymbol{w}^{t+1}\leftarrow \boldsymbol{\omega}^{t} - \eta\lambda\boldsymbol{\omega}^{t} + 
     \frac{\eta}{N}\frac{\partial L(\boldsymbol{\omega}^{t})}{\partial \boldsymbol{\omega}}
     \]
-    For each of the three datasets, we do the same thing.  We first find a learning rate \(\eta\) that permit
-    the loss to converge in at most 200 iterations.  We loop over a grid to find the best \(\eta\) (in terms 
+    Let the linear predictor for observation \(j\) be
+    \[
+    z_j = w_0 + \sum_{i=1}^p w_i x_{ji},
+    \]
+    and define the augmented covariate vector \(\tilde{\boldsymbol{x}}_j = (1, x_{j1}, \ldots, x_{jp})^T\)
+    and the parameter vector \(\boldsymbol{\omega} = (w_0, w_1, \ldots, w_p)^T\)
+    The log-likelihood can then be written as
+    \[
+    L(\boldsymbol{\omega}) = \sum_{j=1}^N
+    \left[ y_j z_j - \ln\!\left(1 + e^{z_j}\right) \right].
+    \]
+    Since \(\partial z_j / \partial \boldsymbol{\omega} = \tilde{\boldsymbol{x}}_j\),
+    applying the chain rule yields
+    \[
+    \frac{\partial L(\boldsymbol{\omega})}{\partial \boldsymbol{\omega}}
+    = \sum_{j=1}^N
+    \left(
+    y_j - \frac{e^{z_j}}{1 + e^{z_j}}
+    \right)\tilde{\boldsymbol{x}}_j.
+    \]
+    Stacking terms gives the gradient in vector form,
+    \[
+    \nabla_{\boldsymbol{\omega}} L(\boldsymbol{\omega})
+    = \tilde{\boldsymbol{X}}^{T}
+    \left(
+    \boldsymbol{y} - \frac{e^{\boldsymbol{z}}}{1 + e^{\boldsymbol{z}}}
+    \right),
+    \]
+    where \(\tilde{\boldsymbol{X}}\) is the augmented design matrix with rows
+    \(\tilde{\boldsymbol{x}}_j^{T}\) and
+    \(\boldsymbol{z} = \tilde{\boldsymbol{X}}\boldsymbol{\omega}\).
+
+    For each of the three datasets, we loop over a grid to find the best \(\eta\) (in terms 
     of smallest final training lose), and obtain the plots shown in figure \ref{fig:three_2plus1}.
     \begin{figure}[htbp]
         \centering
         \begin{subfigure}{0.45\textwidth}
             \centering
             \includegraphics[width=\linewidth]{../figures/gisette_eta_plot.png}
-            \caption{Top left}
+            \caption{Gisette: training loss vs.\ iteration for multiple \(\eta\) values.}
         \end{subfigure}
         \hfill
         \begin{subfigure}{0.45\textwidth}
             \centering
             \includegraphics[width=\linewidth]{../figures/madelon_eta_plot.png}
-            \caption{Top right}
+            \caption{Madelon: training loss vs.\ iteration for multiple \(\eta\) values.}
         \end{subfigure}\
         \vspace{0.5em}
         \begin{subfigure}{0.45\textwidth}
             \centering
             \includegraphics[width=\linewidth]{../figures/dexter_eta_plot.png}
-            \caption{Bottom}
+            \caption{Dexter: training loss vs.\ iteration for multiple \(\eta\) values.}
         \end{subfigure}
         \caption{Two images on top, one below.}
         \label{fig:three_2plus1}

@@ -136,12 +136,13 @@ for d in datasets:
     plt.figure()
     
     for eta, curve in loss_curves.items():
+        #if we have the best eta, make it thicker
         if eta == best_eta:
             plt.plot(np.arange(1, iters + 1), curve, linewidth=3,
                      alpha=1.0, label=rf"$\eta={eta}$ (best)")
         else:
-            plt.plot(np.arange(1, iters + 1), curve, linewidth=1.2,
-                     alpha=0.35, label=rf"$\eta={eta}$")
+            plt.plot(np.arange(1, iters + 1), curve, linewidth=1.5,
+                     alpha=0.3, label=rf"$\eta={eta}$")
             
     plt.xlabel("Iteration")
     plt.ylabel("Training loss $C(w)$")
