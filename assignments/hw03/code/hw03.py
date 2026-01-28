@@ -78,6 +78,8 @@ for d in datasets:
     X_valid_tilde = np.column_stack([np.ones(len(X_test_scaled)), X_test_scaled])
 
     #store all loss curves for this dataset
+    #dict of loss curves, store best learning rate, and smallest final loss
+    #plus coefficient vector of best w from best eta
     loss_curves = {}
     best_eta = None
     best_final = np.inf
@@ -85,7 +87,7 @@ for d in datasets:
 
     #loop over the eta values
     for eta in eta_vals:
-        #set everything to 0 initially
+        #set everything to 0 initially for each eta
         w = np.zeros(p+1)
         losses = []
 
@@ -124,9 +126,12 @@ for d in datasets:
         #check if the series of loss scores is monotone decreasing and that the
         #length is correct
         if monotone and len(losses) == iters:
+            #save full curve
             losses = np.array(losses)
             loss_curves[eta] = losses
-            
+
+            #compare loss at final iteration to the best loss value so far
+            #if it is smaller, update best loss, best eta, and best w vector.
             if losses[-1] < best_final:
                 best_final = losses[-1]
                 best_eta = eta
@@ -136,14 +141,14 @@ for d in datasets:
     plt.figure()
     
     for eta, curve in loss_curves.items():
-        #if we have the best eta, make it thicker
+        #if we have the best eta, make it thicker and less transparent
+        #some nicer labels
         if eta == best_eta:
-            plt.plot(np.arange(1, iters + 1), curve, linewidth=3,
-                     alpha=1.0, label=rf"$\eta={eta}$ (best)")
+            plt.plot(np.arange(1, iters + 1), curve, linewidth=3, alpha=1.0, label=rf"$\eta={eta}$ (best)")
         else:
-            plt.plot(np.arange(1, iters + 1), curve, linewidth=1.5,
-                     alpha=0.3, label=rf"$\eta={eta}$")
-            
+            plt.plot(np.arange(1, iters + 1), curve, linewidth=1.5, alpha=0.3, label=rf"$\eta={eta}$")
+    
+    #saves plot to folder
     plt.xlabel("Iteration")
     plt.ylabel("Training loss $C(w)$")
     plt.title(rf"{name} Training Loss, different $\eta$")

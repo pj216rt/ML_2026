@@ -32,7 +32,7 @@
 
 
 %title info
-\newcommand{\doctitle}{STA 5635 HW 2}
+\newcommand{\doctitle}{STA 5635 HW 3}
 \newcommand{\name}{Palmer Swanson}
 
 \pagestyle{fancy}
@@ -44,8 +44,7 @@
 \begin{document}
 
 \section*{Problem 1}
-\begin{itemize}
-    \item Need to minimize the following:
+Need to minimize the following:
     \[
     C(\boldsymbol{\omega}) = -\frac{1}{N}L(\boldsymbol{\omega}) + \lambda\boldsymbol{\omega}^T\boldsymbol{\omega}
     \]
@@ -90,8 +89,8 @@
     where \(\tilde{\boldsymbol{X}}\) is the augmented design matrix with rows
     \(\tilde{\boldsymbol{x}}_j^{T}\) and
     \(\boldsymbol{z} = \tilde{\boldsymbol{X}}\boldsymbol{\omega}\).
-
-    For each of the three datasets, we loop over a grid to find the best \(\eta\) (in terms 
+\begin{itemize}
+    \item For each of the three datasets, we loop over a grid to find the best \(\eta\) (in terms 
     of smallest final training lose), and obtain the plots shown in figure \ref{fig:three_2plus1}.
     \begin{figure}[htbp]
         \centering
@@ -201,7 +200,6 @@ We can take derivatives with respect to \(\tilde{\boldsymbol{\omega}}\) and sett
 \]
 where \(I\) is the \((p+1)\times(p+1)\) identity matrix (for matrix multiplication).  We can use Python 
 linear algebra solvers to find a solution to this (and we do), but the analytic solution would be:
-
 \[
 \hat{\tilde{\boldsymbol{\omega}}} = 
 \left(\tilde{\boldsymbol{X}}^T\tilde{\boldsymbol{X}} + 
@@ -222,7 +220,7 @@ linear algebra solvers to find a solution to this (and we do), but the analytic 
     \begin{figure}[htbp]
         \centering
         \includegraphics[totalheight=7cm]{../figures/q2_roc_plot.png}
-        \caption{abcd.}
+        \caption{ROC curves for ridge and logistic regression models.}
         \label{fig:q2_roc}
     \end{figure}
 
