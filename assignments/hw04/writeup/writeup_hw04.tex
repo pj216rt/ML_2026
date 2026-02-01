@@ -55,9 +55,13 @@ TISP variable selection method With threshold operator:
 Penalized logistic regression:
 \[
 L(\boldsymbol{\omega}) = \frac{1}{N}\sum_{j=1}^{N}\text{ln}
-(1+e^{-y_j^{*}\boldsymbol{\omega}^T\boldsymbol{x}_j}) + \lambda\sum_{i=1}^{p}p(\omega_i)\]
+(1+e^{-y_j^{*}\boldsymbol{\omega}^T\boldsymbol{x}_j}) + \lambda\sum_{i=1}^{p}p(\omega_i)
+\]
+assuming \(y_j^*\in \{-1,1\}\)
 and algorithm iteration:
 \[
 \boldsymbol{\omega}^{t+1} = \Theta\left(\boldsymbol{\omega}^{t} + 
-\eta'X^T\left[\boldsymbol{y}- \frac{1}{1 + e^{-X\boldsymbol{\omega}^{t}}}\right], \lambda\right)\]
+\eta'X^T\left[\boldsymbol{y}- \frac{1}{1 + e^{-X\boldsymbol{\omega}^{t}}}\right], \lambda\right)
+\]
+assuming \(y_j^*\in \{-0,1\}\)
 \end{document}
