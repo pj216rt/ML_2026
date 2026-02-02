@@ -64,4 +64,10 @@ and algorithm iteration:
 \eta'X^T\left[\boldsymbol{y}- \frac{1}{1 + e^{-X\boldsymbol{\omega}^{t}}}\right], \lambda\right)
 \]
 assuming \(y_j^*\in \{-0,1\}\)
+
+\section*{Problem 2}
+FSA variable selection using logistic loss with shrinkage:
+\[
+L_D(\beta) = \frac{1}{N}\sum_{i=1}^{N}\text{ln}
+(1+e^{-y_i\beta^T\boldsymbol{x}_j}) + s\lVert\beta\rVert_{2}^{2}\]
 \end{document}

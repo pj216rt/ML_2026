@@ -49,7 +49,7 @@ eta = 0.0
 features = [10, 30, 100, 300, 1000, 3000]
 
 #we're going to be using logspace anyways
-lambdas_to_search = np.logspace(-4, 0, 15)
+lambdas_to_search = np.logspace(-4, 0, 100)
 print(lambdas_to_search)
 
 #temporary lambda value
@@ -104,7 +104,7 @@ for d in q1_datasets:
 
         #this loops just searches for the best lambda
         for j in lambdas_to_search:
-            print(j)
+            #print(j)
 
             #initialize w to 0s
             w = np.zeros(p)
@@ -141,6 +141,9 @@ for d in q1_datasets:
         #now loop over everything again to time plot and get misclass rates
         w = np.zeros(p)
 
+        #need to store missclass error only when trying to select 1000 features
+        misclass_1000 = []
+
         start = time.time()
         for t in range(iters):
             z = X_train_tilde @ w
@@ -149,6 +152,19 @@ for d in q1_datasets:
             update_port = X_train_tilde.T @ difference
             temp = w + (eta_prime*update_port)
             w = threshold_operator(temp, best_lambda)
+
+            #need to track within this iterations loop
+            #now how to do that
+            if k == 1000:
+                z_new = X_train_tilde @ w
+                p_train_1 = np.exp(-np.logaddexp(0.0, -z_new))
+                p_train_0 = np.exp(-np.logaddexp(0.0, z_new))
+                odds_train = p_train_1/p_train_0
+                yhat_train = (odds_train > 1.0).astype(int)
+                train_err = np.mean(yhat_train != y_train_converted_01)
+
+                #append to misclass_1000 
+                misclass_1000.append(train_err)
 
         train_time = time.time() - start
 
@@ -181,6 +197,15 @@ for d in q1_datasets:
         #compute AUC
         test_auc = roc_auc_score(y_valid_converted_01, X_valid_tilde@w)
 
+        #plotting the misclass_error vs iterations for 1000 features
+        if k == 1000:
+            plt.figure()
+            plt.plot(np.arange(1, iters + 1), misclass_1000)
+            plt.xlabel("Iteration")
+            plt.ylabel("Train misclassification error")
+            plt.title(f"{name}: Train misclass vs iteration (k approx 1000, lambda={best_lambda:.3g})")
+            plt.show()
+
         #append to results
         results.append({
             "dataset": name,
@@ -195,3 +220,10 @@ for d in q1_datasets:
 
 df = pd.DataFrame(results)
 print(df)
+
+#need to send this table to LATEX
+
+
+
+#Q2, using same datasets
+q2_datasets = q1_datasets
