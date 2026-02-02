@@ -2,6 +2,8 @@ import pandas as pd
 import numpy as np
 from sklearn.preprocessing import StandardScaler
 import time
+import matplotlib.pyplot as plt
+from sklearn.metrics import roc_auc_score, roc_curve
 
 #Q1 datasets
 q1_datasets = [
@@ -89,6 +91,9 @@ for d in q1_datasets:
     #from notes, eta' can be 1/N
     eta_prime = 1.0/N
 
+    #empty to store the results
+    results = []
+
     #ok so what are we doing here.  We can to find a lambda that gets us the closest to some number
     #of features.  first thing we need to do is loop over the number of possible features.
     #going to be at least 2 loops
@@ -134,4 +139,25 @@ for d in q1_datasets:
                 best_lambda = lamb
                 best_selected_vars = k_selected
     
-    #now loop over the 
+    #now loop over everything again to time plot and get misclass rates
+    w = np.zeros(p)
+
+    start = time.time()
+    for t in range(iters):
+        z = X_train_tilde @ w
+        frac = 1.0 / (1.0 + np.exp(-z))
+        difference = (y_train_converted_01 - frac)
+        update_port = X_train_tilde.T @ difference
+        temp = w + (eta_prime*update_port)
+        w = threshold_operator(temp, lamb)
+
+    train_time = time.time() - start
+
+    k_selected = int(np.sum(np.abs(w[1:]) > 1e-10))
+
+    #append to results
+    results.append({
+        "dataset": name,
+        "target_num_features": features,
+        
+    })
