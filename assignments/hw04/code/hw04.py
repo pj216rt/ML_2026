@@ -49,11 +49,13 @@ eta = 0.0
 features = [10, 30, 100, 300, 1000, 3000]
 
 #we're going to be using logspace anyways
-lambdas_to_search = np.logspace(-4, 0, 5)
+lambdas_to_search = np.logspace(-4, 0, 15)
 print(lambdas_to_search)
 
 #temporary lambda value
 lamb = 0.1
+
+results = []
 
 #Q1
 for d in q1_datasets:
@@ -90,10 +92,7 @@ for d in q1_datasets:
 
     #from notes, eta' can be 1/N
     eta_prime = 1.0/N
-
-    #empty to store the results
-    results = []
-
+    
     #ok so what are we doing here.  We can to find a lambda that gets us the closest to some number
     #of features.  first thing we need to do is loop over the number of possible features.
     #going to be at least 2 loops
@@ -126,7 +125,7 @@ for d in q1_datasets:
 
                 #temporary new omega and do the thresholding
                 temp = w + (eta_prime*update_port)
-                w = threshold_operator(temp, lamb)
+                w = threshold_operator(temp, j)
             
             #need to count how many variables were selected
             #don't count itnercept and give a small tolerance
@@ -136,28 +135,63 @@ for d in q1_datasets:
 
             if (best_delta is None) or (delta < best_delta):
                 best_delta = delta
-                best_lambda = lamb
+                best_lambda = j
                 best_selected_vars = k_selected
     
-    #now loop over everything again to time plot and get misclass rates
-    w = np.zeros(p)
+        #now loop over everything again to time plot and get misclass rates
+        w = np.zeros(p)
 
-    start = time.time()
-    for t in range(iters):
-        z = X_train_tilde @ w
-        frac = 1.0 / (1.0 + np.exp(-z))
-        difference = (y_train_converted_01 - frac)
-        update_port = X_train_tilde.T @ difference
-        temp = w + (eta_prime*update_port)
-        w = threshold_operator(temp, lamb)
+        start = time.time()
+        for t in range(iters):
+            z = X_train_tilde @ w
+            frac = 1.0 / (1.0 + np.exp(-z))
+            difference = (y_train_converted_01 - frac)
+            update_port = X_train_tilde.T @ difference
+            temp = w + (eta_prime*update_port)
+            w = threshold_operator(temp, best_lambda)
 
-    train_time = time.time() - start
+        train_time = time.time() - start
 
-    k_selected = int(np.sum(np.abs(w[1:]) > 1e-10))
+        k_selected = int(np.sum(np.abs(w[1:]) > 1e-10))
 
-    #append to results
-    results.append({
-        "dataset": name,
-        "target_num_features": features,
-        
-    })
+        #train and test misclass errors
+        z_train = X_train_tilde @ w
+        z_test = X_valid_tilde @ w
+
+        #get probabilities for 1 and 0
+        p_train_1 = np.exp(-np.logaddexp(0.0, -z_train))
+        p_train_0 = np.exp(-np.logaddexp(0.0, z_train))
+
+        p_test_1 = np.exp(-np.logaddexp(0.0, -z_test))
+        p_test_0 = np.exp(-np.logaddexp(0.0, z_test))
+
+        #compute the odds of train and test
+        odds_train = p_train_1/p_train_0
+        odds_test = p_test_1/p_test_0
+
+        #make predictions.  Predcit 1 if Odds > 1
+        #as.int makes things nicer
+        yhat_train = (odds_train > 1.0).astype(int)
+        yhat_test = (odds_test > 1.0).astype(int)
+
+        #misclassification error
+        train_err = np.mean(yhat_train != y_train_converted_01)
+        test_err = np.mean(yhat_test != y_valid_converted_01)
+
+        #compute AUC
+        test_auc = roc_auc_score(y_valid_converted_01, X_valid_tilde@w)
+
+        #append to results
+        results.append({
+            "dataset": name,
+            "target_features": k,
+            "selected_features": k_selected,
+            "selected_lambda": best_lambda,
+            "train_misclass": train_err,
+            "test_misclass": test_err,
+            "test_auc": test_auc,
+            "train_time_sec": train_time
+        })
+
+df = pd.DataFrame(results)
+print(df)
