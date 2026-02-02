@@ -35,14 +35,23 @@ def threshold_operator(ws, lamb):
      mask = np.ones_like(w_cop, dtype=bool)
      mask[0] = False
 
-     #threshold
+     #threshold  booleanwise
+     w_cop[mask & (np.abs(w_cop) <= lamb)] = 0.0
+
+     return w_cop
 
 
 #Q1 parameters
 iters = 100
 eta = 0.0
-eta_prime = 0.001
 features = [10, 30, 100, 300, 1000, 3000]
+
+#we're going to be using logspace anyways
+lambdas_to_search = np.logspace(-4, 0, 5)
+print(lambdas_to_search)
+
+#temporary lambda value
+lamb = 0.1
 
 #Q1
 for d in q1_datasets:
@@ -77,21 +86,52 @@ for d in q1_datasets:
     #get N, p
     N, p = X_train_tilde.shape
 
-    #initialize w to 0s
-    w = np.zeros(p)
+    #from notes, eta' can be 1/N
+    eta_prime = 1.0/N
 
-    for t in range(iters):
-            #get predictor
-            z = X_train_tilde @ w
+    #ok so what are we doing here.  We can to find a lambda that gets us the closest to some number
+    #of features.  first thing we need to do is loop over the number of possible features.
+    #going to be at least 2 loops
+    for k in features:
+        print(k)
+        best_lambda = None
+        best_delta = None
+        best_selected_vars = None
 
-            #build fractional part
-            frac = 1.0/(1.0 + np.exp(-z))
+        #this loops just searches for the best lambda
+        for j in lambdas_to_search:
+            print(j)
 
-            #build y- fractional part
-            difference = y_train_converted_01 - frac
+            #initialize w to 0s
+            w = np.zeros(p)
 
-            #get the update portion
-            update_port = X_train_tilde.T @ difference
+            #loop over the number of iterations
+            for i in range(iters):
+                #get predictor
+                z = X_train_tilde @ w
 
-            #temporary new omega
-            temp = w + (eta_prime*update_port)
+                #build fractional part
+                frac = 1.0/(1.0 + np.exp(-z))
+
+                #build y- fractional part
+                difference = y_train_converted_01 - frac
+
+                #get the update portion
+                update_port = X_train_tilde.T @ difference
+
+                #temporary new omega and do the thresholding
+                temp = w + (eta_prime*update_port)
+                w = threshold_operator(temp, lamb)
+            
+            #need to count how many variables were selected
+            #don't count itnercept and give a small tolerance
+            #check to see if we are close to the desired number of features
+            k_selected = int(np.sum(np.abs(w[1:]) > 1e-10))
+            delta = abs(k_selected - k)
+
+            if (best_delta is None) or (delta < best_delta):
+                best_delta = delta
+                best_lambda = lamb
+                best_selected_vars = k_selected
+    
+    #now loop over the 
