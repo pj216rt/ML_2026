@@ -75,4 +75,7 @@ FSA variable selection using logistic loss with shrinkage:
 L_D(\beta) = \frac{1}{N}\sum_{i=1}^{N}\text{ln}
 (1+e^{-y_i\beta^T\boldsymbol{x}_j}) + s\lVert\beta\rVert_{2}^{2}
 \]
+Inverse scheduler with parameter \(\mu\):
+\[
+M_i = k + (p-k)\text{max}\left(0, \frac{N^{iter}-2i}{2i\mu+N^{iter}}\right)\]
 \end{document}

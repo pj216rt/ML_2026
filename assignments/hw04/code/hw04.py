@@ -268,6 +268,8 @@ q2_datasets = q1_datasets
 
 s = 0.001
 mu = 100
+iters = 100
+features = [10, 30, 100, 300, 1000, 3000]
 
 for d in q2_datasets:
      #get name of dataset
@@ -282,8 +284,14 @@ for d in q2_datasets:
         X_train = pd.read_csv(d["X_train"], delim_whitespace=True, header=None)
         X_valid = pd.read_csv(d["X_valid"], delim_whitespace=True, header=None)
     
+    #need to check that y is +1 or -1.  If loop?
     y_train = pd.read_csv(d["y_train"], header=None).values.ravel()
     y_valid = pd.read_csv(d["y_valid"], header=None).values.ravel()
+
+    #need to force these ya values to be -1/+1
+    #https://numpy.org/devdocs/reference/generated/numpy.where.html
+    y_train = np.where(y_train > 0, 1.0, -1.0)
+    y_valid = np.where(y_valid > 0, 1.0, -1.0)
 
     #convert labels to 0/1 for likelihood to work
     y_train_converted_01 = (y_train == 1).astype(int)
@@ -293,3 +301,58 @@ for d in q2_datasets:
     scaler = StandardScaler()
     X_train_scaled = scaler.fit_transform(X_train)
     X_test_scaled = scaler.transform(X_valid)
+
+    #add column of 1s to augment w
+    X_train_tilde = np.column_stack([np.ones(len(X_train_scaled)), X_train_scaled])
+    X_valid_tilde = np.column_stack([np.ones(len(X_test_scaled)), X_test_scaled])
+
+    #get N, p
+    N, p = X_train_tilde.shape
+
+    #loop over the number of possible features
+    for feat in features:
+        #initialize to 0
+        beta = np.zeros(p)
+
+        start = time.time()
+
+        for i in range(iters):
+            #get predictor
+            z = X_train_tilde @ beta
+            yz = y_train * z
+
+            #need numpy function I found
+            #https://numpy.org/devdocs/reference/generated/numpy.log1p.html
+            exponent_part = np.exp(-yz)
+            log_part = np.log1p(exponent_part)
+            loss = np.mean(log_part)
+
+            #no sparsity penalty
+            #compute gradient
+            part1 = 1.0 / (1.0 + np.exp(yz))
+            grad = -(1/N)*(X_train_tilde.T @ (y_train*part1))
+
+            #update Beta using gradient step
+            #is s equivalent to eta in the notes??  It  has to be
+            beta = beta - (s*grad)
+
+            #inverse scheduler
+            denom = (2.0*i*mu) + iters
+            numer = (iters - (2*i))
+            ratio = numer/denom
+
+            #get maximum of 0 or the ratio.  Exclude the intercept
+            p_feat = p-1
+            max_portion = max(0, ratio)
+            Mi = np.round(feat + (p-feat)*max_portion)
+            Mi = int(Mi)
+
+            #need to keep the top Mi variables, not including intercept
+            #sort.  Keep the largest Mi
+            b = beta[1:]
+            abs_b = abs(b)
+            sort = np.argsort(abs_b)
+            
+        end = time.time()
+        run_time = end-start
+            
