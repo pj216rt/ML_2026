@@ -12,14 +12,16 @@ q1_datasets = [
         "X_train": "assignments/hw04/data/gisette_train.data",
         "y_train": "assignments/hw04/data/gisette_train.labels",
         "X_valid": "assignments/hw04/data/gisette_valid.data",
-        "y_valid": "assignments/hw04/data/gisette_valid.labels"
+        "y_valid": "assignments/hw04/data/gisette_valid.labels",
+        "missclass_1000_out": "assignments/hw04/figures/gisette_misclass_1000.png"
     },
     {
         "name": "Dexter",
         "X_train": "assignments/hw04/data/dexter_train.csv",
         "y_train": "assignments/hw04/data/dexter_train.labels",
         "X_valid": "assignments/hw04/data/dexter_valid.csv",
-        "y_valid": "assignments/hw04/data/dexter_valid.labels"
+        "y_valid": "assignments/hw04/data/dexter_valid.labels",
+        "missclass_1000_out": "assignments/hw04/figures/dexter_misclass_1000.png"
     }
 ]
 
@@ -51,8 +53,7 @@ features = [10, 30, 100, 300, 1000, 3000]
 #we're going to be using logspace anyways
 lambdas_to_search = np.logspace(-4, 0, 100)
 
-
-""""
+"""
 results = []
 
 #Q1
@@ -201,8 +202,10 @@ for d in q1_datasets:
             plt.plot(np.arange(1, iters + 1), misclass_1000)
             plt.xlabel("Iteration")
             plt.ylabel("Train misclassification error")
-            plt.title(f"{name}: Train misclass vs iteration (k approx 1000, lambda={best_lambda:.3g})")
-            plt.show()
+            plt.title(f"{name}: Train misclass vs iteration (k approx 1000)")
+            plt.savefig(d["missclass_1000_out"], dpi=400, bbox_inches="tight")
+            plt.close()
+            #plt.show()
 
         #append to results
         results.append({
@@ -216,10 +219,47 @@ for d in q1_datasets:
             "train_time_sec": train_time
         })
 
+#df for both Gisette and Dexter
 df = pd.DataFrame(results)
 print(df)
 
 #need to send this table to LATEX
+LATEX_table = df.to_latex(
+    index=False,
+    caption=None,
+    label=None,
+    column_format="c" * df.shape[1],
+    escape=False
+)
+
+#save latex table
+with open("assignments/hw04/output/misclass_table.tex", "w") as f:
+    f.write(LATEX_table)
+
+#plot the final train and test misclassification error vs # of selected features
+#using a semilog axis
+for name in df["dataset"].unique():
+    #create filename to save plot
+    outpath = f"assignments/hw04/figures/{name}_misclass_vs_features.png"
+
+    #select the results for a given dataset
+    sub = df[df["dataset"] == name].copy()
+    
+    #works better sorted
+    #sub = sub.sort_values("selected_features")
+
+    plt.figure()
+    plt.semilogx(sub["selected_features"].to_numpy(), sub["train_misclass"].to_numpy(), marker="o", label="Train")
+    plt.semilogx(sub["selected_features"].to_numpy(), sub["test_misclass"].to_numpy(), marker="s", label="Test")
+
+    plt.xlabel("Number of selected features")
+    plt.ylabel("Misclassification error")
+    plt.title(f"{name}: Final misclassification error vs selected features")
+    plt.legend()
+    plt.grid(True, which="both", linestyle="--", alpha=0.5)
+    plt.savefig(outpath, dpi=400, bbox_inches="tight")
+    plt.close()
+    #plt.show()
 """
 
 
