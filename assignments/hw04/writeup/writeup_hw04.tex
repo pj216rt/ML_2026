@@ -41,7 +41,7 @@
 \begin{document}
 
 \begin{center}
-    {\Large \textbf{\doctitle}}\\[6pt]
+    {\Large \doctitle}\\[6pt]
     {\name}\\[3pt]
     {\docdate}
 \end{center}
@@ -69,7 +69,9 @@ and algorithm iteration:
 \]
 assuming \(y_j\in \{-0,1\}\).
 
-For \(\eta=0\) and 100 iterations, the first portion of question 1 is shown in Figure \ref{fig:Gisette_portion}:
+For \(\eta=0\) and 100 iterations, the first portion of question 1 is shown in Figure \ref{fig:Gisette_portion}.
+We search for appropiate \(\lambda\) by performing a grid search across a range of values and selected the 
+value that is closest to the desired number of features.  
 \begin{figure}[htbp]
     \centering
     \begin{subfigure}{0.48\textwidth}
@@ -108,7 +110,7 @@ Second portion of question 1 is hown in Figure \ref{fig:Dexter_portion}
 \end{figure}
 
 The table reporting the train and test misclassification error, the test AUC, corresponding number of features
-selected, values of \(\lambda\), and the training time are reported in
+selected, values of \(\lambda\), and the training time are reported in Table \ref{tab:table_q1}.  
 
  \begin{table}[htbp]
     \centering

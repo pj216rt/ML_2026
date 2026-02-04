@@ -487,7 +487,7 @@ for name in df_q2["dataset"].unique():
 
     plt.xlabel("Number of selected features (k)")
     plt.ylabel("Misclassification error")
-    plt.title(f"{name}  Misclassification error (TISP ans FSA) vs. k")
+    plt.title(f"{name}  Misclassification error (TISP and FSA) vs. k")
     plt.legend()
     plt.grid(True, linestyle="--", alpha=0.5)
     plt.savefig(outpath, dpi=400, bbox_inches="tight")
