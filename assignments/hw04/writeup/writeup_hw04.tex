@@ -121,16 +121,34 @@ selected, values of \(\lambda\), and the training time are reported in
 \end{table}
 
 \section*{Problem 2}
-FSA variable selection using logistic loss with shrinkage:
+FSA variable selection using logistic loss (w/o shrinkage, FSA doesn't use a shrinkage penalty):
 \[
 L_D(\beta) = \frac{1}{N}\sum_{i=1}^{N}\text{ln}
-(1+e^{-y_i\beta^T\boldsymbol{x}_j}) + s\lVert\beta\rVert_{2}^{2}
+(1+e^{-y_i\beta^T\boldsymbol{x}_j})
 \]
-Inverse scheduler with parameter \(\mu\):
+We can compute the gradient for one element with a few key facts, and a substitution: \(u = -y_i\beta^T\boldsymbol{x}_j\):
+
+\[
+\frac{d}{du}\text{log}(1 + e^{u}) = \frac{e^{u}}{1 + e^{u}} = \frac{1}{1 + e^{-u}}\quad \quad\quad
+\frac{d}{d\beta}u = -y_i\boldsymbol{x}_i
+\]
+\[
+\frac{d}{d\beta}\text{log}(1 + e^{u}) = \frac{1}{1 + e^{-u}}(-y_i\boldsymbol{x}_i)
+\]
+substitution gives us:
+\[
+\frac{d}{d\beta}\text{log}(1 + e^{-y_i\beta^T\boldsymbol{x}_j}) = 
+\frac{1}{1 + e^{y_i\beta^T\boldsymbol{x}_j}}(-y_i\boldsymbol{x}_i)
+\]
+With this, we can get the gradient for all N:
+\[
+\nabla L_D(\beta) = \frac{-1}{N}\sum_{i=1}^{N}\frac{(y_i\boldsymbol{x}_i)}{1 + e^{y_i\beta^T\boldsymbol{x}_j}}
+\]
+We also use an inverse scheduler with parameter \(\mu\):
 \[
 M_i = k + (p-k)\text{max}\left(0, \frac{N^{iter}-2i}{2i\mu+N^{iter}}\right)
 \]
-For \(s=0.001\), \(\mu=100\), and 100 iterations, the first portion of question 2 is shown in
+For \(s=0.001\), \(\mu=100\), and 100 iterations, the first portion of question 2 is shown in Figure \ref{fig:q2}:
 
 \begin{figure}[htbp]
     \centering
@@ -164,7 +182,9 @@ Table \ref{tab:table_q2}:
     \label{tab:table_q2}
 \end{table}
 
-With only two exceptions (the 1000 k case), TISP appears to train faster.  
+With only two exceptions (the 1000 k case), TISP appears to train faster.  Specifically, the ratio of the 
+computation times FSA/TISP is greater than 1 for all but the 1000 feature case in both datasets.  Did not
+include this table to abide by submission guidelines.
 
 We can also include the train/test misclassification error rate vs. \(k\) for the two datasets in
 Figure \ref{fig:q2_comp}:
@@ -189,4 +209,10 @@ Figure \ref{fig:q2_comp}:
 
 The two methods appear to be quit similar, with only slight deviations in trajectories.  
 
+\newpage
+\newpage
+%adding code
+\appendix
+\section*{Code}
+\lstinputlisting[language=Python]{../code/hw04.py}
 \end{document}

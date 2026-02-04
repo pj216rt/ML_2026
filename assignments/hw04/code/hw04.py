@@ -73,7 +73,7 @@ for d in q1_datasets:
     y_train = pd.read_csv(d["y_train"], header=None).values.ravel()
     y_valid = pd.read_csv(d["y_valid"], header=None).values.ravel()
 
-    #convert labels to 0/1 for likelihood to work
+    #convert labels to 0/1 for later
     y_train_converted_01 = (y_train == 1).astype(int)
     y_valid_converted_01 = (y_valid == 1).astype(int)
 
@@ -95,6 +95,7 @@ for d in q1_datasets:
     #ok so what are we doing here.  We can to find a lambda that gets us the closest to some number
     #of features.  first thing we need to do is loop over the number of possible features.
     #going to be at least 2 loops
+    #basically a grid search over the possible lambda values
     for k in features:
         print(k)
         best_lambda = None
@@ -132,11 +133,14 @@ for d in q1_datasets:
             k_selected = int(np.sum(np.abs(w[1:]) > 1e-10))
             delta = abs(k_selected - k)
 
+            #if we don't have a best distance, of if the gap is smaller than the previous
+            #best, replace gap, lambda, number of variables selected
             if (best_delta is None) or (delta < best_delta):
                 best_delta = delta
                 best_lambda = j
                 best_selected_vars = k_selected
-    
+        
+        #ok so now we have the lambdas.  Use them to run this again
         #now loop over everything again to time plot and get misclass rates
         w = np.zeros(p)
 
@@ -341,11 +345,13 @@ for d in q2_datasets:
             log_part = np.log1p(exponent_part)
             loss = np.mean(log_part)
 
+            #keep track of the 1000 feature case
             if feat == 1000:
                 training_loss_1000.append(loss)
 
             #no sparsity penalty
-            #compute gradient
+            #compute gradient.  Per quiz and notes, FSA does NOT use a sparsity penalty for feature
+            #selection
             part1 = 1.0 / (1.0 + np.exp(yz))
             grad = -(1/N)*(X_train_tilde.T @ (y_train*part1))
 
@@ -378,11 +384,12 @@ for d in q2_datasets:
             b[sort[:-Mi]] = 0.0
             beta[1:] = b
             #should end up with something that looks like
-            #beta = [1.0, 0.0, 3.0, 5.0, -3.0, 0.0, 0.0, 0.0]
+            #beta = [1.0, 0.0, 3.0, 5.0, -3.0, 0.0, 0.0, 0.0,...]
 
         end = time.time()
         run_time = end-start
 
+        #gotta be a better way to do this stuff
         #need to make predictions now for misclass and AUC
         z_train = X_train_tilde @ beta
         z_test = X_valid_tilde @ beta
@@ -439,12 +446,13 @@ for d in q2_datasets:
 #df for both Gisette and Dexter
 df_q2 = pd.DataFrame(results)
 
+#renaming this table for LATEX
 df_q2_latex = df_q2.rename(columns={
     "dataset": "Dataset",
     "target_features": "Target $k$",
     "selected_features": "Selected",
-    "train_misclass": "Train Miscl.",
-    "test_misclass": "Test Miscl.",
+    "train_misclass": "Train Misclass.",
+    "test_misclass": "Test Misclass.",
     "test_auc": "Test AUC",
     "train_time_sec": "Time (s)"
 })
@@ -485,7 +493,8 @@ for name in df_q2["dataset"].unique():
     plt.savefig(outpath, dpi=400, bbox_inches="tight")
     plt.close()
 
-#want to compare the computation time for the two methods
+#want to compare the computation time for the two methods.  
+#not included in the writeup, but I did it.  
 df_q1["method"] = "TISP"
 df_q2["method"] = "FSA"
 df_time = pd.concat([df_q1, df_q2], ignore_index=True)
@@ -503,4 +512,22 @@ df_time = (
         )
         .reset_index()
 )
-print(df_time)
+
+#rename columns
+df_time_latex = df_time.rename(columns={
+    "dataset": "Dataset",
+    "target_features": "Target $k$",
+    "TISP": "TISP Time (s)",
+    "FSA": "FSA Time (s)",
+    "FSA_over_TISP": "FSA / TISP"
+})
+
+latex_table = df_time_latex.to_latex(
+    index=False,
+    escape=False,       
+    float_format="%.2f",
+    column_format="c" * df_time_latex.shape[1]
+)
+
+with open("assignments/hw04/output/time_comparison.tex", "w") as f:
+    f.write(latex_table)
