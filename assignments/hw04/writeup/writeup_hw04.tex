@@ -164,4 +164,29 @@ Table \ref{tab:table_q2}:
     \label{tab:table_q2}
 \end{table}
 
+With only two exceptions (the 1000 k case), TISP appears to train faster.  
+
+We can also include the train/test misclassification error rate vs. \(k\) for the two datasets in
+Figure \ref{fig:q2_comp}:
+
+\begin{figure}[htbp]
+    \centering
+    \begin{subfigure}{0.48\textwidth}
+        \centering
+        \includegraphics[width=\linewidth]{../figures/Gisette_misclass_TISP_vs_FSA_.png}
+        \caption{Gisette Dataset}
+    \end{subfigure}
+    \hfill
+    \begin{subfigure}{0.48\textwidth}
+        \centering
+        \includegraphics[width=\linewidth]{../figures/Dexter_misclass_TISP_vs_FSA_.png}
+        \caption{Dexter Dataset}
+    \end{subfigure}
+    \caption{Plot of Training Loss vs. Target Features.  Gisette Dataset (left), Dexter
+    Dataset (right).}
+    \label{fig:q2_comp}
+\end{figure}
+
+The two methods appear to be quit similar, with only slight deviations in trajectories.  
+
 \end{document}

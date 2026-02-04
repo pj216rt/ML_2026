@@ -221,7 +221,6 @@ for d in q1_datasets:
 
 #df for both Gisette and Dexter
 df_q1 = pd.DataFrame(results)
-print(df_q1)
 
 #rename columns.  LATEX wasn't liking the column names
 df_q1_latex = df_q1.rename(columns={
@@ -439,7 +438,6 @@ for d in q2_datasets:
 
 #df for both Gisette and Dexter
 df_q2 = pd.DataFrame(results)
-print(df_q2)
 
 df_q2_latex = df_q2.rename(columns={
     "dataset": "Dataset",
@@ -491,3 +489,18 @@ for name in df_q2["dataset"].unique():
 df_q1["method"] = "TISP"
 df_q2["method"] = "FSA"
 df_time = pd.concat([df_q1, df_q2], ignore_index=True)
+
+#need to pivot.  Chaining this stuff together like the pipe operator in R
+df_time = (
+    df_time[["dataset", "target_features", "method", "train_time_sec"]]
+        .pivot(
+            index=["dataset", "target_features"],
+            columns="method",
+            values="train_time_sec"
+        )
+        .assign(
+            FSA_over_TISP=lambda x: (x["FSA"] / x["TISP"]).round(2)
+        )
+        .reset_index()
+)
+print(df_time)
