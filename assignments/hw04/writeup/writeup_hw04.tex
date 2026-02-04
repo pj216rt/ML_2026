@@ -48,7 +48,7 @@
 \vspace{12pt}
 
 \section*{Problem 1}
-TISP variable selection method With threshold operator:
+TISP variable selection method ith threshold operator:
 \[
 \Theta(x,\lambda,\eta) = 
 \begin{cases} 
@@ -67,7 +67,56 @@ and algorithm iteration:
 \boldsymbol{\omega}^{t+1} = \Theta\left(\boldsymbol{\omega}^{t} + 
 \eta'X^T\left[\boldsymbol{y}- \frac{1}{1 + e^{-X\boldsymbol{\omega}^{t}}}\right], \lambda\right)
 \]
-assuming \(y_j^*\in \{-0,1\}\)
+assuming \(y_j\in \{-0,1\}\).
+
+First portion of question 1 is shown in Figure \ref{fig:Gisette_portion}:
+\begin{figure}[h]
+    \centering
+    \begin{subfigure}{0.48\textwidth}
+        \centering
+        \includegraphics[width=\linewidth]{../figures/gisette_misclass_1000.png}
+        \caption{Training misclassification error vs Iteration Number}
+    \end{subfigure}
+    \hfill
+    \begin{subfigure}{0.48\textwidth}
+        \centering
+        \includegraphics[width=\linewidth]{../figures/Gisette_misclass_vs_features.png}
+        \caption{Train and Test Misclassification error vs Number of Selected Features}
+    \end{subfigure}
+    \caption{Train Misclassification Error vs. TISP iteration (left) and Train and Test Misclassification 
+    Error vs. Number of Selected Features (right).  Gisette Dataset.}
+    \label{fig:Gisette_portion}
+\end{figure}
+
+Second portion of question 1 is hown in Figure \ref{fig:Dexter_portion}
+\begin{figure}[h]
+    \centering
+    \begin{subfigure}{0.48\textwidth}
+        \centering
+        \includegraphics[width=\linewidth]{../figures/dexter_misclass_1000.png}
+        \caption{Training misclassification error vs Iteration Number}
+    \end{subfigure}
+    \hfill
+    \begin{subfigure}{0.48\textwidth}
+        \centering
+        \includegraphics[width=\linewidth]{../figures/Dexter_misclass_vs_features.png}
+        \caption{Train and Test Misclassification error vs Number of Selected Features}
+    \end{subfigure}
+    \caption{Train Misclassification Error vs. TISP iteration (left) and Train and Test Misclassification 
+    Error vs. Number of Selected Features (right).  Dexter Dataset.}
+    \label{fig:Dexter_portion}
+\end{figure}
+
+The table reporting the train and test misclassification error, the test AUC, corresponding number of features
+selected, values of \(\lambda\), and the training time are reported in
+
+ \begin{table}[htbp]
+        \centering
+        \input{../output/misclass_table.tex}
+        \caption{Train and Test Misclassification Errors, Test AUC, Number of Selected Features, values of 
+        \(\lambda\), and training time.}
+        \label{tab:table_q1}
+    \end{table}
 
 \section*{Problem 2}
 FSA variable selection using logistic loss with shrinkage:
