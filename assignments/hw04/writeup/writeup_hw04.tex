@@ -69,8 +69,8 @@ and algorithm iteration:
 \]
 assuming \(y_j\in \{-0,1\}\).
 
-First portion of question 1 is shown in Figure \ref{fig:Gisette_portion}:
-\begin{figure}[h]
+For \(\eta=0\) and 100 iterations, the first portion of question 1 is shown in Figure \ref{fig:Gisette_portion}:
+\begin{figure}[htbp]
     \centering
     \begin{subfigure}{0.48\textwidth}
         \centering
@@ -89,7 +89,7 @@ First portion of question 1 is shown in Figure \ref{fig:Gisette_portion}:
 \end{figure}
 
 Second portion of question 1 is hown in Figure \ref{fig:Dexter_portion}
-\begin{figure}[h]
+\begin{figure}[htbp]
     \centering
     \begin{subfigure}{0.48\textwidth}
         \centering
@@ -111,12 +111,14 @@ The table reporting the train and test misclassification error, the test AUC, co
 selected, values of \(\lambda\), and the training time are reported in
 
  \begin{table}[htbp]
-        \centering
+    \centering
+    \resizebox{\textwidth}{!}{
         \input{../output/misclass_table.tex}
-        \caption{Train and Test Misclassification Errors, Test AUC, Number of Selected Features, values of 
-        \(\lambda\), and training time.}
-        \label{tab:table_q1}
-    \end{table}
+    }
+    \caption{Train and Test Misclassification Errors, Test AUC, Number of Selected Features, values of 
+    \(\lambda\), and training time, TISP algorithm.}
+    \label{tab:table_q1}
+\end{table}
 
 \section*{Problem 2}
 FSA variable selection using logistic loss with shrinkage:
@@ -126,5 +128,40 @@ L_D(\beta) = \frac{1}{N}\sum_{i=1}^{N}\text{ln}
 \]
 Inverse scheduler with parameter \(\mu\):
 \[
-M_i = k + (p-k)\text{max}\left(0, \frac{N^{iter}-2i}{2i\mu+N^{iter}}\right)\]
+M_i = k + (p-k)\text{max}\left(0, \frac{N^{iter}-2i}{2i\mu+N^{iter}}\right)
+\]
+For \(s=0.001\), \(\mu=100\), and 100 iterations, the first portion of question 2 is shown in
+
+\begin{figure}[htbp]
+    \centering
+    \begin{subfigure}{0.48\textwidth}
+        \centering
+        \includegraphics[width=\linewidth]{../figures/gisette_misclass_1000_FSA.png}
+        \caption{Gisette Dataset}
+    \end{subfigure}
+    \hfill
+    \begin{subfigure}{0.48\textwidth}
+        \centering
+        \includegraphics[width=\linewidth]{../figures/dexter_misclass_1000_FSA.png}
+        \caption{Dexter Dataset}
+    \end{subfigure}
+    \caption{Plot of Training Loss vs. Iteration Number for \(k=1000\).  Gisette Dataset (left), Dexter
+    Dataset (right).}
+    \label{fig:q2}
+\end{figure}
+At first glance, neither datasets training loss converges, which makes sense.  \(\mu\) is only 100 and
+we only have 100 iterations; \(\mu\) is usually 300 and we typically have more iterations.  
+
+The table reporting train and test misclassification errors, test AUC, and training time is shown in 
+Table \ref{tab:table_q2}:
+
+ \begin{table}[htbp]
+    \centering
+    \resizebox{\textwidth}{!}{
+        \input{../output/misclass_table_q2.tex}
+    }
+    \caption{Train and Test Misclassification Errors, Test AUC, and training time, FSA algorithm.}
+    \label{tab:table_q2}
+\end{table}
+
 \end{document}

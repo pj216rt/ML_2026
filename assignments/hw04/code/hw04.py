@@ -223,12 +223,24 @@ for d in q1_datasets:
 df_q1 = pd.DataFrame(results)
 print(df_q1)
 
+#rename columns.  LATEX wasn't liking the column names
+df_q1_latex = df_q1.rename(columns={
+    "dataset": "Dataset",
+    "target_features": "Target Features",
+    "selected_features": "Selected Features",
+    "selected_lambda": r"$\lambda$",
+    "train_misclass": "Train Misclass.",
+    "test_misclass": "Test Misclass.",
+    "test_auc": "Test AUC",
+    "train_time_sec": "Train Time (sec)"
+})
+
 #need to send this table to LATEX
-LATEX_table = df_q1.to_latex(
+LATEX_table = df_q1_latex.to_latex(
     index=False,
     caption=None,
     label=None,
-    column_format="c" * df_q1.shape[1],
+    column_format="c" * df_q1_latex.shape[1],
     escape=False
 )
 
@@ -429,12 +441,22 @@ for d in q2_datasets:
 df_q2 = pd.DataFrame(results)
 print(df_q2)
 
+df_q2_latex = df_q2.rename(columns={
+    "dataset": "Dataset",
+    "target_features": "Target $k$",
+    "selected_features": "Selected",
+    "train_misclass": "Train Miscl.",
+    "test_misclass": "Test Miscl.",
+    "test_auc": "Test AUC",
+    "train_time_sec": "Time (s)"
+})
+
 #need to send this table to LATEX
-LATEX_table = df_q2.to_latex(
+LATEX_table = df_q2_latex.to_latex(
     index=False,
     caption=None,
     label=None,
-    column_format="c" * df_q2.shape[1],
+    column_format="c" * df_q2_latex.shape[1],
     escape=False
 )
 
@@ -464,3 +486,8 @@ for name in df_q2["dataset"].unique():
     plt.grid(True, linestyle="--", alpha=0.5)
     plt.savefig(outpath, dpi=400, bbox_inches="tight")
     plt.close()
+
+#want to compare the computation time for the two methods
+df_q1["method"] = "TISP"
+df_q2["method"] = "FSA"
+df_time = pd.concat([df_q1, df_q2], ignore_index=True)
