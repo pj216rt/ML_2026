@@ -140,7 +140,7 @@ We can compute the gradient for one element with a few key facts, and a substitu
 substitution gives us:
 \[
 \frac{d}{d\beta}\text{log}(1 + e^{-y_i\beta^T\boldsymbol{x}_j}) = 
-\frac{1}{1 + e^{y_i\beta^T\boldsymbol{x}_j}}(-y_i\boldsymbol{x}_i)
+\frac{1}{1 + e^{y_i\beta^T\boldsymbol{x}_j}}(-y_i\boldsymbol{x}_i) + 2s\beta
 \]
 With this, we can get the gradient for all N:
 \[
@@ -150,7 +150,7 @@ We also use an inverse scheduler with parameter \(\mu\):
 \[
 M_i = k + (p-k)\text{max}\left(0, \frac{N^{iter}-2i}{2i\mu+N^{iter}}\right)
 \]
-For \(s=0.001\), \(\mu=100\), and 100 iterations, the first portion of question 2 is shown in Figure \ref{fig:q2}:
+For \(s=0.001\), \(\mu=100\), \(\eta=0.1\) and 100 iterations, the first portion of question 2 is shown in Figure \ref{fig:q2}:
 
 \begin{figure}[htbp]
     \centering
@@ -169,9 +169,6 @@ For \(s=0.001\), \(\mu=100\), and 100 iterations, the first portion of question 
     Dataset (right).}
     \label{fig:q2}
 \end{figure}
-At first glance, neither datasets training loss converges, which makes sense.  \(\mu\) is only 100 and
-we only have 100 iterations; \(\mu\) is usually 300 and we typically have more iterations.  
-
 The table reporting train and test misclassification errors, test AUC, and training time is shown in 
 Table \ref{tab:table_q2}:
 
@@ -184,9 +181,9 @@ Table \ref{tab:table_q2}:
     \label{tab:table_q2}
 \end{table}
 
-With only two exceptions (the 1000 k case), TISP appears to train faster.  Specifically, the ratio of the 
-computation times FSA/TISP is greater than 1 for all but the 1000 feature case in both datasets.  Did not
-include this table to abide by submission guidelines.
+To compare the computation time of the FSA to TISP, I computed the ratio of FSA computation time to TISP.  
+For the 30 and 1000 features cases, FSA was faster.  Also, for the 10 feature Gisette case, FSA was faster.
+For all others, TISP was faster.  I Did not include this table to abide by submission guidelines.
 
 We can also include the train/test misclassification error rate vs. \(k\) for the two datasets in
 Figure \ref{fig:q2_comp}:

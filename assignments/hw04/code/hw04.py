@@ -529,6 +529,8 @@ df_time_latex = df_time.rename(columns={
     "FSA_over_TISP": "FSA / TISP"
 })
 
+print(df_time_latex)
+
 latex_table = df_time_latex.to_latex(
     index=False,
     escape=False,       
