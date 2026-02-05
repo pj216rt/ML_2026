@@ -46,7 +46,6 @@ def threshold_operator(ws, lamb):
 
      return w_cop
 
-
 #Q1 parameters
 iters = 100
 eta = 0.0
@@ -276,7 +275,6 @@ for name in df_q1["dataset"].unique():
     plt.close()
     #plt.show()
 
-
 #Q2, using same datasets
 q2_datasets = q1_datasets
 
@@ -284,6 +282,8 @@ s = 0.001
 mu = 100
 iters = 100
 features = [10, 30, 100, 300, 1000, 3000]
+#eta=20 was too big.  Overflow error
+eta = 0.1
 
 results = []
 
@@ -341,9 +341,11 @@ for d in q2_datasets:
 
             #need numpy function I found
             #https://numpy.org/devdocs/reference/generated/numpy.log1p.html
+            #adding penalty component
             exponent_part = np.exp(-yz)
             log_part = np.log1p(exponent_part)
-            loss = np.mean(log_part)
+            penalty = s*np.sum(beta[1:]**2)
+            loss = np.mean(log_part) + penalty
 
             #keep track of the 1000 feature case
             if feat == 1000:
@@ -355,9 +357,14 @@ for d in q2_datasets:
             part1 = 1.0 / (1.0 + np.exp(yz))
             grad = -(1/N)*(X_train_tilde.T @ (y_train*part1))
 
+            #penalty component, not penalizing intercept
+            pen_grad = 2*s*beta
+            pen_grad[0] = 0.0
+
+            grad = grad + pen_grad
+
             #update Beta using gradient step
-            #is s equivalent to eta in the notes??  It  has to be
-            beta = beta - (s*grad)
+            beta = beta - (eta*grad)
 
             #inverse scheduler
             denom = (2.0*i*mu) + iters

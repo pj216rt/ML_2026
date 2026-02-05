@@ -123,10 +123,10 @@ selected, values of \(\lambda\), and the training time are reported in Table \re
 \end{table}
 
 \section*{Problem 2}
-FSA variable selection using logistic loss (w/o shrinkage, FSA doesn't use a shrinkage penalty):
+FSA variable selection using logistic loss:
 \[
 L_D(\beta) = \frac{1}{N}\sum_{i=1}^{N}\text{ln}
-(1+e^{-y_i\beta^T\boldsymbol{x}_j})
+(1+e^{-y_i\beta^T\boldsymbol{x}_j}) + s\lvert\lvert\beta\rvert\rvert_{2}^2
 \]
 We can compute the gradient for one element with a few key facts, and a substitution: \(u = -y_i\beta^T\boldsymbol{x}_j\):
 
