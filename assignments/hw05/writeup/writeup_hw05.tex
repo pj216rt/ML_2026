@@ -52,8 +52,35 @@
 \begin{enumerate}[label=(1\alph*), ref=1\alph*]
     \item Loss function: 
     \(L(\boldsymbol{w}) = \frac{1}{N}\sum_{i=1}^{N}f(y_i\boldsymbol{x}_i^T\boldsymbol{w}) + 
-    s\lvert\lvert\boldsymbol{w}\rvert\rvert_{2}^{2}\)
-    \item Derive the variance.
+    s\lvert\lvert\boldsymbol{w}\rvert\rvert_{2}^{2}\), where \(f(x) = \text{max}(0,1-x)\).  
+    I do not believe that the derivative of \(f(x)\) exists, at least not cleanly.  The portion of the loss 
+    consisting of the average of the function only contributes if the function doesn't return 0.  In other words:
+    \[
+    f(y_i\boldsymbol{x}_i^T\boldsymbol{w}) = \begin{cases} 
+    0 & y_i\boldsymbol{x}_i^T\boldsymbol{w} \geq 1 \\
+    1- y_i\boldsymbol{x}_i^T\boldsymbol{w} & y_i\boldsymbol{x}_i^T\boldsymbol{w} < 1
+    \end{cases}
+    \] 
+    So for a point where \(y_i\boldsymbol{x}_i^T\boldsymbol{w} < 1\), the 
+    gradient is \(\frac{\partial }{\partial \boldsymbol{w}}(1- y_i\boldsymbol{x}_i^T\boldsymbol{w}) = 
+    -y_i\boldsymbol{x}_i^T\).  For a points where
+    \(y_i\boldsymbol{x}_i^T\boldsymbol{w} \geq 1\), the gradient is 
+    \(\frac{\partial }{\partial \boldsymbol{w}}(0) = 0\).  
+    All together, the total gradient is:
+    \[
+    \nabla_{\boldsymbol{w}} = 
+    \frac{-1}{N}\sum_{i:(y_i\boldsymbol{x}_i^T\boldsymbol{w}) < 1}(y_i\boldsymbol{x}_i^T) + 2s\boldsymbol{w}
+    \]
+
+    We plot the training loss vs. iteration number is Figure \ref{fig:SVM_training_loss}.  
+
+    \begin{figure}[htbp] 
+        \centering 
+        \includegraphics[width=0.5\linewidth]{../figures/primal_SVM_training_loss.png} 
+        \caption{Primal SVM Training Loss vs. Iterations} 
+    \label{fig:SVM_training_loss} 
+    \end{figure}
+    \item SVM package to trin linear SVM, C=1.  
     \item Discuss asymptotic behavior.
 \end{enumerate}
 
