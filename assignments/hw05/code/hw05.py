@@ -81,8 +81,27 @@ plt.close()
 #plt.show()
 
 #report the errors
-#need to save this as a table.  To do later
-print(f"{train_misclass:.4f}\t\t{test_misclass:.4f}")
+#need to save this as a table.  Brackets around the elements works for some reason
+#https://medium.com/practical-pandas/pandas-dictionary-to-dataframe-5-ways-to-convert-dictionary-to-dataframe-in-python-35b37577834c
+error_df = pd.DataFrame({
+    "Method": ["Primal SVM"],
+    "Train Misclass": [train_misclass],
+    "Test Misclass": [test_misclass]
+})
+print(error_df)
+
+#need to send this table to LATEX
+LATEX_table = error_df.to_latex(
+    index=False,
+    caption=None,
+    label=None,
+    column_format="c" * error_df.shape[1],
+    escape=False
+)
+
+#save latex table
+with open("assignments/hw05/output/train_test_errors.tex", "w") as f:
+    f.write(LATEX_table)
 
 #part b
 #SVM 
@@ -105,8 +124,25 @@ yhat_test  = svm_fit.predict(X_test_scaled)
 train_err = np.mean(yhat_train != y_train)
 test_err  = np.mean(yhat_test != y_valid)
 
-print(f"Train misclassification: {train_err:.4f}")
-print(f"Test misclassification : {test_err:.4f}")
+error_df = pd.DataFrame({
+    "Method": ["Linear SVM"],
+    "Train Misclass": [train_err],
+    "Test Misclass": [test_err]
+})
+print(error_df)
+
+#need to send this table to LATEX
+LATEX_table = error_df.to_latex(
+    index=False,
+    caption=None,
+    label=None,
+    column_format="c" * error_df.shape[1],
+    escape=False
+)
+
+#save latex table
+with open("assignments/hw05/output/train_test_errors_linear_svm.tex", "w") as f:
+    f.write(LATEX_table)
 
 #get number of support vectors
 num_sv = svm_fit.n_support_.sum()
@@ -130,8 +166,25 @@ yhat_test  = svm_poly.predict(X_test_scaled)
 train_err = np.mean(yhat_train != y_train)
 test_err  = np.mean(yhat_test != y_valid)
 
-print(f"Train misclassification: {train_err:.4f}")
-print(f"Test misclassification : {test_err:.4f}")
+error_df = pd.DataFrame({
+    "Method": ["Linear SVM"],
+    "Train Misclass": [train_err],
+    "Test Misclass": [test_err]
+})
+print(error_df)
+
+#need to send this table to LATEX
+LATEX_table = error_df.to_latex(
+    index=False,
+    caption=None,
+    label=None,
+    column_format="c" * error_df.shape[1],
+    escape=False
+)
+
+#save latex table
+with open("assignments/hw05/output/train_test_errors_polynomial_svm.tex", "w") as f:
+    f.write(LATEX_table)
 
 #get number of support vectors
 num_sv = svm_poly.n_support_.sum()
@@ -140,6 +193,7 @@ print("Number of support vectors:", num_sv)
 #part d, RBF kernel estimators
 train_errs = []
 test_errs = []
+num_sup_vector = []
 
 gammas = []
 for i in range(1,7):
@@ -163,11 +217,13 @@ for gamma in gammas:
     # misclassification errors
     train_err = np.mean(yhat_train != y_train)
     test_err  = np.mean(yhat_test != y_valid)
+    num_sv = svm_brf.n_support_.sum()
 
     train_errs.append(train_err)
     test_errs.append(test_err)
+    num_sup_vector.append(num_sv)
 
-    print(f"gamma={gamma:.1e} | train err={train_err:.4f} | test err={test_err:.4f}")
+    print(f"gamma={gamma:.1e} | train error={train_err:.4f} | test error={test_err:.4f}")
 
 #plot these gamma values
 plt.figure()
@@ -180,5 +236,15 @@ plt.ylabel("Misclassification error")
 plt.title("RBF Kernel SVM (C = 1): Misclassification Errors vs $\\gamma$")
 plt.legend()
 plt.grid(True, which="both", linestyle="--", alpha=0.5)
+plt.show()
 
+#plot the number of support vectors vs gamma
+plt.figure()
+plt.semilogx(gammas, num_sup_vector, marker="o")
+
+#can use r to get LATEX symbols
+plt.xlabel(r"$\gamma$")
+plt.ylabel("Number of Support Vectors")
+plt.title("RBF Kernel SVM (C = 1): Support Vectors vs $\\gamma$")
+plt.grid(True, which="both", linestyle="--", alpha=0.5)
 plt.show()
