@@ -123,11 +123,13 @@ yhat_test  = svm_fit.predict(X_test_scaled)
 #get error
 train_err = np.mean(yhat_train != y_train)
 test_err  = np.mean(yhat_test != y_valid)
+num_sv = svm_fit.n_support_.sum()
 
 error_df = pd.DataFrame({
     "Method": ["Linear SVM"],
     "Train Misclass": [train_err],
-    "Test Misclass": [test_err]
+    "Test Misclass": [test_err],
+    "Num. Support Vectors": [num_sv]
 })
 print(error_df)
 
@@ -143,11 +145,6 @@ LATEX_table = error_df.to_latex(
 #save latex table
 with open("assignments/hw05/output/train_test_errors_linear_svm.tex", "w") as f:
     f.write(LATEX_table)
-
-#get number of support vectors
-num_sv = svm_fit.n_support_.sum()
-print("Number of support vectors:", num_sv)
-#report this into a table
 
 #part c, using polynomial kernel, degree 2
 svm_poly = svm.SVC(
@@ -165,11 +162,13 @@ yhat_test  = svm_poly.predict(X_test_scaled)
 #get error
 train_err = np.mean(yhat_train != y_train)
 test_err  = np.mean(yhat_test != y_valid)
+num_sv = svm_fit.n_support_.sum()
 
 error_df = pd.DataFrame({
     "Method": ["Linear SVM"],
     "Train Misclass": [train_err],
-    "Test Misclass": [test_err]
+    "Test Misclass": [test_err],
+    "Num. Support Vectors": [num_sv]
 })
 print(error_df)
 
@@ -185,10 +184,6 @@ LATEX_table = error_df.to_latex(
 #save latex table
 with open("assignments/hw05/output/train_test_errors_polynomial_svm.tex", "w") as f:
     f.write(LATEX_table)
-
-#get number of support vectors
-num_sv = svm_poly.n_support_.sum()
-print("Number of support vectors:", num_sv)
 
 #part d, RBF kernel estimators
 train_errs = []
