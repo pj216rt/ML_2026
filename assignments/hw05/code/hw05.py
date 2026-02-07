@@ -114,3 +114,71 @@ print("Number of support vectors:", num_sv)
 #report this into a table
 
 #part c, using polynomial kernel, degree 2
+svm_poly = svm.SVC(
+    kernel="poly",
+    degree=2,
+    C=1.0
+)
+
+svm_poly.fit(X_train_scaled, y_train)
+
+#make predictions
+yhat_train = svm_poly.predict(X_train_scaled)
+yhat_test  = svm_poly.predict(X_test_scaled)
+
+#get error
+train_err = np.mean(yhat_train != y_train)
+test_err  = np.mean(yhat_test != y_valid)
+
+print(f"Train misclassification: {train_err:.4f}")
+print(f"Test misclassification : {test_err:.4f}")
+
+#get number of support vectors
+num_sv = svm_poly.n_support_.sum()
+print("Number of support vectors:", num_sv)
+
+#part d, RBF kernel estimators
+train_errs = []
+test_errs = []
+
+gammas = []
+for i in range(1,7):
+    temp = 10.0**(-i)
+    gammas.append(temp)
+
+#looping over the gamma values
+for gamma in gammas:
+    svm_brf = svm.SVC(
+        kernel="rbf",
+        C=1.0,
+        gamma=gamma
+        )
+    
+    svm_brf.fit(X_train_scaled, y_train)
+
+    # predictions
+    yhat_train = svm_brf.predict(X_train_scaled)
+    yhat_test  = svm_brf.predict(X_test_scaled)
+
+    # misclassification errors
+    train_err = np.mean(yhat_train != y_train)
+    test_err  = np.mean(yhat_test != y_valid)
+
+    train_errs.append(train_err)
+    test_errs.append(test_err)
+
+    print(f"gamma={gamma:.1e} | train err={train_err:.4f} | test err={test_err:.4f}")
+
+#plot these gamma values
+plt.figure()
+plt.semilogx(gammas, train_errs, marker="o", label="Train")
+plt.semilogx(gammas, test_errs, marker="s", label="Test")
+
+#can use r to get LATEX symbols
+plt.xlabel(r"$\gamma$")
+plt.ylabel("Misclassification error")
+plt.title("RBF Kernel SVM (C = 1): Misclassification Errors vs $\\gamma$")
+plt.legend()
+plt.grid(True, which="both", linestyle="--", alpha=0.5)
+
+plt.show()
