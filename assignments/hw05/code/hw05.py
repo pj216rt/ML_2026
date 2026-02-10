@@ -64,8 +64,6 @@ for i in range(iters):
 yhat_train = np.sign(X_train_tilde @ w)
 yhat_test = np.sign(X_valid_tilde @ w)
 
-#what about if we have yhat_train = 0?
-
 train_misclass = np.mean(yhat_train != y_train)
 test_misclass  = np.mean(yhat_test != y_valid)
 
