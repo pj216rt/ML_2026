@@ -123,7 +123,7 @@ svm_fit.fit(X_train_scaled, y_train)
 yhat_train = svm_fit.predict(X_train_scaled)
 yhat_test  = svm_fit.predict(X_test_scaled)
 
-#get error
+#get errors and number of support vectors
 train_err = np.mean(yhat_train != y_train)
 test_err  = np.mean(yhat_test != y_valid)
 num_sv = svm_fit.n_support_.sum()
@@ -166,7 +166,7 @@ svm_poly.fit(X_train_scaled, y_train)
 yhat_train = svm_poly.predict(X_train_scaled)
 yhat_test  = svm_poly.predict(X_test_scaled)
 
-#get error
+#get error and number of support vectors
 train_err = np.mean(yhat_train != y_train)
 test_err  = np.mean(yhat_test != y_valid)
 num_sv = svm_poly.n_support_.sum()
@@ -198,6 +198,7 @@ train_errs = []
 test_errs = []
 num_sup_vector = []
 
+#fill gammas with loop
 gammas = []
 for i in range(1,7):
     temp = 10.0**(-i)
@@ -223,11 +224,12 @@ for gamma in gammas:
     test_err  = np.mean(yhat_test != y_valid)
     num_sv = svm_brf.n_support_.sum()
 
+    #append for plotting and table
     train_errs.append(train_err)
     test_errs.append(test_err)
     num_sup_vector.append(num_sv)
 
-#saving these results as a df
+#saving these results as a df, with \gamma for ease with LATEX
 partd_results = pd.DataFrame({
     r"$\gamma$": gammas,
     "Train Error": train_errs,
@@ -265,7 +267,7 @@ plt.close()
 
 
 
-#plot the number of support vectors vs gamma
+#plot the number of support vectors vs gamma with horizontal line
 plt.figure()
 plt.semilogx(gammas, num_sup_vector, marker="o")
 plt.axhline(
