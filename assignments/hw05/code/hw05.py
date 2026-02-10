@@ -227,6 +227,27 @@ for gamma in gammas:
     test_errs.append(test_err)
     num_sup_vector.append(num_sv)
 
+#saving these results as a df
+partd_results = pd.DataFrame({
+    r"$\gamma$": gammas,
+    "Train Error": train_errs,
+    "Test Error": test_errs,
+    "Support Vectors": num_sup_vector
+})
+
+#need to send this table to LATEX
+LATEX_table = partd_results.to_latex(
+    index=False,
+    caption=None,
+    label=None,
+    column_format="c" * partd_results.shape[1],
+    escape=False
+)
+
+#save latex table
+with open("assignments/hw05/output/train_test_errors_num_sv_svm_partd.tex", "w") as f:
+    f.write(LATEX_table)
+
 #plot these gamma values
 plt.figure()
 plt.semilogx(gammas, train_errs, marker="o", label="Train")
@@ -254,7 +275,6 @@ plt.axhline(
     color="red",
     label=f"Number of SV from part b"
 )
-
 #can use r to get LATEX symbols
 plt.xlabel(r"$\gamma$")
 plt.ylabel("Number of Support Vectors")

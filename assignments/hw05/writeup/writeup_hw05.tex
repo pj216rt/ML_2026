@@ -84,9 +84,7 @@
     figure \ref{tab:table_q1_parta}:
     \begin{table}[htbp]
         \centering
-        \resizebox{\textwidth}{!}{
-            \input{../output/train_test_errors.tex}
-        }
+        \input{../output/train_test_errors.tex}
         \caption{Train and Test Misclassification Errors, Primal SVM via Gradient Descent.}
         \label{tab:table_q1_parta}
     \end{table}
@@ -94,9 +92,7 @@
     We can report the training errors and number of support vectors in table \ref{tab:table_q1_partb}:
     \begin{table}[htbp]
         \centering
-        \resizebox{\textwidth}{!}{
-            \input{../output/train_test_errors_linear_svm.tex}
-        }
+        \input{../output/train_test_errors_linear_svm.tex}
         \caption{Train, Test Misclassification Errors and Number of Support Vectors, Linear SVM, C=1}
         \label{tab:table_q1_partb}
     \end{table}
@@ -106,9 +102,7 @@
     We can report the training error and number of support vectors in table \ref{tab:table_q1_partc}: 
     \begin{table}[htbp]
         \centering
-        \resizebox{\textwidth}{!}{
-            \input{../output/train_test_errors_polynomial_svm.tex}
-        }
+        \input{../output/train_test_errors_polynomial_svm.tex}
         \caption{Train, Test Misclassification Errors and Number of Support Vectors, Quadraticc SVM, C=1}
         \label{tab:table_q1_partc}
     \end{table}
@@ -130,7 +124,24 @@
         number of support vectors from part b (quadratic SVM).} 
     \label{fig:SVM_RBF_kernels_num_sv} 
     \end{figure}
-    \item asdf
+    \item To help with part d, we consider trhe following table \ref{tab:table_q1_partd}:
+    \begin{table}[htbp]
+        \centering
+        \input{../output/train_test_errors_num_sv_svm_partd.tex}
+        \caption{Train, Test Misclassification Errors and Number of Support Vectors, part d}
+        \label{tab:table_q1_partd}
+    \end{table}
+
+    Of all the models considered, it appears as though model a and model b both obtained the lowest 
+    test error of 0.019.  Of models b through d, the model in part b (quadratic SVM) has the smallest 
+    number of support vectors (1236).  
 \end{enumerate}
+
+\newpage
+\newpage
+%adding code
+\appendix
+\section*{Code}
+%\lstinputlisting[language=Python]{../code/hw04.py}
 
 \end{document}
