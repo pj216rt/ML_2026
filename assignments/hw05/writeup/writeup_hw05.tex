@@ -85,7 +85,7 @@
     \begin{table}[htbp]
         \centering
         \input{../output/train_test_errors.tex}
-        \caption{Train and Test Misclassification Errors, Primal SVM via Gradient Descent.}
+        \caption{Train and Test Misclassification Errors, Primal SVM}
         \label{tab:table_q1_parta}
     \end{table}
     \item Use SVM package to train linear SVM, C=1.
@@ -108,7 +108,7 @@
     \end{table}
     Compared to part b, the number of support vectors is almost four times as great.  
     \item Train an SVM classifer with C=1 and RBF kernels \(\gamma = 10^{-i}, i \in \{1,2,\dots, 6\}\).
-    We can plot the train and test misclassification errors vs \(\gamma\) in figure \ref{fig:SVM_RBF_kernels}: 
+    We plot the train and test misclassification errors vs \(\gamma\) in figure \ref{fig:SVM_RBF_kernels}: 
     \begin{figure}[htbp] 
         \centering 
         \includegraphics[width=0.5\linewidth]{../figures/misclass_errors_v_gamma.png} 
@@ -124,7 +124,7 @@
         number of support vectors from part b (quadratic SVM).} 
     \label{fig:SVM_RBF_kernels_num_sv} 
     \end{figure}
-    \item To help with part d, we consider trhe following table \ref{tab:table_q1_partd}:
+    \item To help with part d, we consider the following table \ref{tab:table_q1_partd}:
     \begin{table}[htbp]
         \centering
         \input{../output/train_test_errors_num_sv_svm_partd.tex}
@@ -142,6 +142,6 @@
 %adding code
 \appendix
 \section*{Code}
-%\lstinputlisting[language=Python]{../code/hw04.py}
+\lstinputlisting[language=Python]{../code/hw05.py}
 
 \end{document}

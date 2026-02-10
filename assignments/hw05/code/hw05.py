@@ -76,7 +76,7 @@ plt.xlabel("Iteration")
 plt.ylabel("Training Loss")
 plt.title(
     f"Primal SVM via Gradient Descent\n"
-    f"Training loss vs iteration (η = {eta}, s = {s})"
+    f"Training loss vs iteration (eta = {eta}, s = {s})"
 )
 plt.grid(True, alpha=0.4)
 plt.savefig("assignments/hw05/figures/primal_SVM_training_loss.png", dpi=400, bbox_inches="tight")
