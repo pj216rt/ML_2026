@@ -72,18 +72,64 @@
     \frac{-1}{N}\sum_{i:(y_i\boldsymbol{x}_i^T\boldsymbol{w}) < 1}(y_i\boldsymbol{x}_i^T) + 2s\boldsymbol{w}
     \]
 
-    We plot the training loss vs. iteration number is Figure \ref{fig:SVM_training_loss}.  
-
+    We plot the training loss vs. iteration number is table \ref{fig:SVM_training_loss}.  
     \begin{figure}[htbp] 
         \centering 
         \includegraphics[width=0.5\linewidth]{../figures/primal_SVM_training_loss.png} 
         \caption{Primal SVM Training Loss vs. Iterations} 
     \label{fig:SVM_training_loss} 
     \end{figure}
+
+    The table outlining the training and testing misclassification errors is shown in 
+    figure \ref{tab:table_q1_parta}:
+    \begin{table}[htbp]
+        \centering
+        \resizebox{\textwidth}{!}{
+            \input{../output/train_test_errors.tex}
+        }
+        \caption{Train and Test Misclassification Errors, Primal SVM via Gradient Descent.}
+        \label{tab:table_q1_parta}
+    \end{table}
     \item Use SVM package to train linear SVM, C=1.
-    We can report the training errors and number of support vectors 
+    We can report the training errors and number of support vectors in table \ref{tab:table_q1_partb}:
+    \begin{table}[htbp]
+        \centering
+        \resizebox{\textwidth}{!}{
+            \input{../output/train_test_errors_linear_svm.tex}
+        }
+        \caption{Train, Test Misclassification Errors and Number of Support Vectors, Linear SVM, C=1}
+        \label{tab:table_q1_partb}
+    \end{table}
+    Compared to part a, the test misclassification error is the same, but the train misclassification error is 
+    slightly lower.  
     \item Use SVM package to train a SVM with polynomial kernel of degree 2.  
-    \item Train an SVM classifer with C=1 and RBF kernels \(\gamma\).
+    We can report the training error and number of support vectors in table \ref{tab:table_q1_partc}: 
+    \begin{table}[htbp]
+        \centering
+        \resizebox{\textwidth}{!}{
+            \input{../output/train_test_errors_polynomial_svm.tex}
+        }
+        \caption{Train, Test Misclassification Errors and Number of Support Vectors, Quadraticc SVM, C=1}
+        \label{tab:table_q1_partc}
+    \end{table}
+    Compared to part b, the number of support vectors is almost four times as great.  
+    \item Train an SVM classifer with C=1 and RBF kernels \(\gamma = 10^{-i}, i \in \{1,2,\dots, 6\}\).
+    We can plot the train and test misclassification errors vs \(\gamma\) in figure \ref{fig:SVM_RBF_kernels}: 
+    \begin{figure}[htbp] 
+        \centering 
+        \includegraphics[width=0.5\linewidth]{../figures/misclass_errors_v_gamma.png} 
+        \caption{SVM Classifier, C=1, Train and Test Misclassification Errors vs \(\gamma\).} 
+    \label{fig:SVM_RBF_kernels} 
+    \end{figure}
+    We can also plot the number of support vectors vs \(\gamma\), with a dashed line showing the number of support
+    vectors in part b in figure \ref{fig:SVM_RBF_kernels_num_sv}:
+    \begin{figure}[htbp] 
+        \centering 
+        \includegraphics[width=0.5\linewidth]{../figures/num_support_vectors_v_gamma.png} 
+        \caption{SVM Classifier, C=1, Number of Support Vectors vs \(\gamma\).  Dashed line indicates 
+        number of support vectors from part b (quadratic SVM).} 
+    \label{fig:SVM_RBF_kernels_num_sv} 
+    \end{figure}
     \item asdf
 \end{enumerate}
 
