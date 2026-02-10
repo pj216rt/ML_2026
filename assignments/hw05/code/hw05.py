@@ -36,7 +36,7 @@ w = np.zeros(p)
 training_loss = []
 
 for i in range(iters):
-    if i % 20 == 0:
+    if i % 50 == 0:
         print(i)
     #don't need transpose?
     #y_i*x_i*w
@@ -74,7 +74,10 @@ plt.figure()
 plt.plot(np.arange(1, iters + 1), training_loss)
 plt.xlabel("Iteration")
 plt.ylabel("Training Loss")
-plt.title("Primal SVM via Gradient Descent: training loss vs iteration")
+plt.title(
+    f"Primal SVM via Gradient Descent\n"
+    f"Training loss vs iteration (η = {eta}, s = {s})"
+)
 plt.grid(True, alpha=0.4)
 plt.savefig("assignments/hw05/figures/primal_SVM_training_loss.png", dpi=400, bbox_inches="tight")
 plt.close()
@@ -125,6 +128,9 @@ train_err = np.mean(yhat_train != y_train)
 test_err  = np.mean(yhat_test != y_valid)
 num_sv = svm_fit.n_support_.sum()
 
+#save the number of support vectors for later
+saved_for_later = num_sv
+
 error_df = pd.DataFrame({
     "Method": ["Linear SVM"],
     "Train Misclass": [train_err],
@@ -146,6 +152,7 @@ LATEX_table = error_df.to_latex(
 with open("assignments/hw05/output/train_test_errors_linear_svm.tex", "w") as f:
     f.write(LATEX_table)
 
+
 #part c, using polynomial kernel, degree 2
 svm_poly = svm.SVC(
     kernel="poly",
@@ -162,10 +169,10 @@ yhat_test  = svm_poly.predict(X_test_scaled)
 #get error
 train_err = np.mean(yhat_train != y_train)
 test_err  = np.mean(yhat_test != y_valid)
-num_sv = svm_fit.n_support_.sum()
+num_sv = svm_poly.n_support_.sum()
 
 error_df = pd.DataFrame({
-    "Method": ["Linear SVM"],
+    "Method": ["Quadratic SVM"],
     "Train Misclass": [train_err],
     "Test Misclass": [test_err],
     "Num. Support Vectors": [num_sv]
@@ -185,6 +192,7 @@ LATEX_table = error_df.to_latex(
 with open("assignments/hw05/output/train_test_errors_polynomial_svm.tex", "w") as f:
     f.write(LATEX_table)
 
+
 #part d, RBF kernel estimators
 train_errs = []
 test_errs = []
@@ -197,6 +205,7 @@ for i in range(1,7):
 
 #looping over the gamma values
 for gamma in gammas:
+    print(gamma)
     svm_brf = svm.SVC(
         kernel="rbf",
         C=1.0,
@@ -218,8 +227,6 @@ for gamma in gammas:
     test_errs.append(test_err)
     num_sup_vector.append(num_sv)
 
-    print(f"gamma={gamma:.1e} | train error={train_err:.4f} | test error={test_err:.4f}")
-
 #plot these gamma values
 plt.figure()
 plt.semilogx(gammas, train_errs, marker="o", label="Train")
@@ -231,15 +238,29 @@ plt.ylabel("Misclassification error")
 plt.title("RBF Kernel SVM (C = 1): Misclassification Errors vs $\\gamma$")
 plt.legend()
 plt.grid(True, which="both", linestyle="--", alpha=0.5)
-plt.show()
+plt.savefig("assignments/hw05/figures/misclass_errors_v_gamma.png", dpi=400, bbox_inches="tight")
+plt.close()
+#plt.show()
+
+
 
 #plot the number of support vectors vs gamma
 plt.figure()
 plt.semilogx(gammas, num_sup_vector, marker="o")
+plt.axhline(
+    y=saved_for_later,
+    linestyle="--",
+    linewidth=2,
+    color="red",
+    label=f"Number of SV from part b"
+)
 
 #can use r to get LATEX symbols
 plt.xlabel(r"$\gamma$")
 plt.ylabel("Number of Support Vectors")
 plt.title("RBF Kernel SVM (C = 1): Support Vectors vs $\\gamma$")
+plt.legend()
 plt.grid(True, which="both", linestyle="--", alpha=0.5)
-plt.show()
+plt.savefig("assignments/hw05/figures/num_support_vectors_v_gamma.png", dpi=400, bbox_inches="tight")
+plt.close()
+#plt.show()
