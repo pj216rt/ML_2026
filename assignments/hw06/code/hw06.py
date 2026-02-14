@@ -49,7 +49,6 @@ part1 = pd.DataFrame({
     ]
 })
 
-
 #need to send this table to LATEX
 LATEX_table = part1.to_latex(
     index=False,
@@ -106,4 +105,64 @@ plt.close()
 #plt.show()
 
 #part c
+#ok 16 classifiers.  2 RFs (22 and 500), 2 methods for determining importance
+#(DMI or Permutation), and 4 k values.  Sounds like a loop is needed.
+
+#store the four importance items from the four cominations of RFs and Methods
+#maybe put these in a dict or something to make sure that the names match the 
+#method
+methods = [MDI_22, MDI_500, PERM_22, PERM_500]
+names = ["RF_22_MDI", "RF_500_MDI", "RF_22_PERM", "RF_500_PERM"]  
 k_values = [10, 20, 30, 40]
+
+rows = []
+
+for i in range(4):
+    #get the method 
+    import_class = methods[i]
+    identifier = names[i]
+    for k in k_values:
+        #need to get the top k features AND their indices
+        #https://numpy.org/doc/2.1/reference/generated/numpy.argsort.html
+        k_selected = np.argsort(-import_class)[:k]
+
+        #get the columns of the data that match these indices
+        X_trains = X_train.iloc[:, k_selected]
+        X_valids = X_valid.iloc[:, k_selected]
+
+        #can still use the y data
+        #train the RF using those k features
+        k_rand_forest = RandomForestClassifier(n_estimators=100,max_features=k)
+
+        k_rand_forest.fit(X_trains, y_train)
+
+        #predictions
+        train_predictions = k_rand_forest.predict(X_trains)
+        test_predictions = k_rand_forest.predict(X_valids)
+
+        #misclass error
+        train_error = 1.0 - accuracy_score(y_train, train_predictions)
+        test_error = 1.0 - accuracy_score(y_valid, test_predictions)
+
+        #add these to the rows
+        rows.append({
+            "Label": identifier,
+            "k": k,
+            "Train Misclass. Error": train_error,
+            "Test Misclass. Error": test_error
+        })
+
+part3 = pd.DataFrame(rows)
+
+#need to send this table to LATEX
+LATEX_table = part3.to_latex(
+    index=False,
+    caption=None,
+    label=None,
+    column_format="c" * part3.shape[1],
+    escape=False
+)
+
+#save latex table
+with open("assignments/hw06/output/train_test_errors_c.tex", "w") as f:
+    f.write(LATEX_table)
