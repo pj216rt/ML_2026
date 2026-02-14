@@ -36,7 +36,6 @@
 \newcommand{\name}{Palmer Swanson}
 \newcommand{\docdate}{\today}
 
-
 %document
 \begin{document}
 
@@ -58,6 +57,13 @@
         \caption{Train and Test Misclassification Errors, part a}
         \label{tab:table_part_a}
     \end{table}
+    \item Compute feature importances using mean decrease in impurity and the permutation feature importances.
+    \begin{figure}[htbp] 
+        \centering 
+        \includegraphics[width=0.7\linewidth]{../figures/feature_importances.png} 
+        \caption{Feature Importances for the two RF, computed via MDI and via Permutations} 
+    \label{fig:SVM_RBF_kernels} 
+    \end{figure}
 \end{enumerate}
 
 \newpage
