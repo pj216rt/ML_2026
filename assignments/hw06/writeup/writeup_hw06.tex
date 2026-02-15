@@ -49,7 +49,7 @@
 \section*{Problem 1}
 
 \begin{enumerate}[label=(1\alph*), ref=1\alph*]
-    \item Two random forest classifiers.  One with 22 features, the other with 500.  Table in figure 
+    \item Two random forest classifiers with 100 trees each.  One with 22 features, the other with 500.  Table in figure 
     \ref{tab:table_part_a}
     \begin{table}[htbp]
         \centering
@@ -57,22 +57,24 @@
         \caption{Train and Test Misclassification Errors, part a}
         \label{tab:table_part_a}
     \end{table}
-    \item Compute feature importances using mean decrease in impurity and the permutation feature importances.
+    \item Compute feature importances using mean decrease in impurity (MDI) and the permutation feature importances.
     \begin{figure}[htbp] 
         \centering 
         \includegraphics[width=0.7\linewidth]{../figures/feature_importances.png} 
         \caption{Feature Importances for the two RF, computed via MDI and via Permutations, part b.} 
     \label{fig:feature_importance} 
     \end{figure}
-    \item Selecting \(k \in\{10, 20, 30, 40\}\) most important features by the two methods on the two classifiers, 
-    train RF classifier.  The test and train errors are reported in table \ref{tab:table_part_c}.  
+    \item Selecting \(k \in\{10, 20, 30, 40\}\) most important features by the two methods mentioned above 
+    on the two classifiers from part a, 
+    train RF classifier where each split is from all 500 features.  
+    The test and train errors are reported in table \ref{tab:table_part_c}.  
     \begin{table}[htbp]
         \centering
         \input{../output/train_test_errors_c.tex}
         \caption{Training and test misclassification errors for the fitted models, part c.}
         \label{tab:table_part_c}
     \end{table}
-    \item For \(k \in\{10, 20, 30, 40\}\), two plots, one of each depth \(d\).  
+    \item For \(k \in\{10, 20, 30, 40\}\), two plots, one of each depth \(d\in\{4,5\}\).  
     \(d=4\) is figure \ref{fig:test_error_d4}, \(d=5\)
     found in figure \ref{fig:test_error_d5}.  
     \begin{figure}[htbp] 
@@ -87,15 +89,16 @@
         \caption{Test Errors vs. \(n\) for the 16 classifiers.  d=5} 
     \label{fig:test_error_d5} 
     \end{figure}
-    Of the 320 classifiers, we can report the configuratio with the lowest test error in table: \ref{tab:table_part_d}
+    Of the 320 classifiers, we can report the configuration with the lowest test error in table: \ref{tab:table_part_d}
     \begin{table}[htbp]
         \centering
         \input{../output/smallest_test_error.tex}
         \caption{Configuration with smallest test error.}
         \label{tab:table_part_d}
     \end{table}
-    \item Of the models, the random forest classifier from part c using selecting the 30 most importance
-    as determined by MDI where each split is from all 500 features has the lowest test error of 0.11667.  
+    \item Of the models, the random forest classifier from part c, which selects the top 30 features 
+    according to mean decrease in impurity (MDI) and allows each split to uses all 500 features, 
+    produced the lowest test misclassification error of 0.1167.  
 \end{enumerate}
 
 \newpage
@@ -103,6 +106,6 @@
 %adding code
 \appendix
 \section*{Code}
-%\lstinputlisting[language=Python]{../code/hw05.py}
+\lstinputlisting[language=Python]{../code/hw06.py}
 
 \end{document}
