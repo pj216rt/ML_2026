@@ -214,20 +214,30 @@ for i in range(4):
                 })
 
 results_d = pd.DataFrame(results)
-print(results_d.head())
-
 
 #plotting stuff.  16 curves on the same plot, for each d.  So two plots
 for d in depths:
-    temp = results_d[results_d["d"] == d].sort_values("n_estimators")
+    plt.figure()
+    temp = results_d[results_d["d"] == d]
 
     #each label is a curve.  Need to work on this loop portion
-    for label in temp:
+    for label in temp["Label"].unique():
+        for k in temp["k"].unique():
+            #extract the one that we want
+            holder = temp[(temp["Label"] == label) & (temp["k"] == k)]
+
+            plt.plot(
+                holder["n_estimators"].values,
+                holder["Test Misclass. Error"].values,
+                marker="o",
+                label=f"{label}, k={k}"
+            )
 
     plt.xlabel("Number of trees n")
     plt.ylabel("Test Misclassification Error")
     plt.title(f"Gradient Boosting: Test Error vs n (max_depth = {d})")
     plt.grid(True, linestyle="--", alpha=0.4)
+    plt.legend(fontsize=8, ncol=2)
     plt.show()  
 
 #need to find row containing the smallest test error
