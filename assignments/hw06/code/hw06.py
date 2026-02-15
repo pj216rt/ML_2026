@@ -1,6 +1,7 @@
 import pandas as pd
 import numpy as np
 from sklearn.ensemble import RandomForestClassifier
+from sklearn.ensemble import GradientBoostingClassifier
 from sklearn.metrics import accuracy_score
 from sklearn.inspection import permutation_importance
 import matplotlib.pyplot as plt
@@ -160,9 +161,66 @@ LATEX_table = part3.to_latex(
     caption=None,
     label=None,
     column_format="c" * part3.shape[1],
-    escape=False
+    escape=True
 )
 
 #save latex table
 with open("assignments/hw06/output/train_test_errors_c.tex", "w") as f:
     f.write(LATEX_table)
+
+#part d.  Big one.  Just add another loop inside part c?
+depths = [4, 5]
+n_s = list(range(10, 110,10))
+
+results = []
+
+#largely the same as part c
+for i in range(4):
+    #get the method 
+    import_class = methods[i]
+    identifier = names[i]
+    for k in k_values:
+        #need to get the top k features AND their indices
+        #https://numpy.org/doc/2.1/reference/generated/numpy.argsort.html
+        k_selected = np.argsort(-import_class)[:k]
+
+        #get the columns of the data that match these indices
+        X_trains = X_train.iloc[:, k_selected]
+        X_valids = X_valid.iloc[:, k_selected]
+
+        for d in depths:
+            for n in n_s:
+                #creating Booster with n decision trees and d maximum depths
+                clf = GradientBoostingClassifier(n_estimators=n, max_depth=d)
+
+                clf.fit(X_trains, y_train)
+
+                #make predictions
+                train_predictions  = clf.predict(X_trains)
+                test_predictions = clf.predict(X_valids)
+
+                #errors
+                train_error = 1.0 - accuracy_score(y_train, train_predictions)
+                test_error = 1.0 - accuracy_score(y_valid, test_predictions)
+
+                #add this to the results
+                results.append({
+                    "Label": identifier,
+                    "k": k,
+                    "d": d,
+                    "n_estimators": n,
+                    "Train Misclass. Error": train_error,
+                    "Test Misclass. Error": test_error
+                })
+
+results_d = pd.DataFrame(results)
+print(results_d.head())
+
+
+#plotting stuff.  16 curves on the same plot
+plt.figure()
+plt.close()  
+
+#need to find row containing the smallest test error
+smallest_test_error = results_d[results_d['Test Misclass. Error'] == results_d['Test Misclass. Error'].min()]
+print(smallest_test_error)
