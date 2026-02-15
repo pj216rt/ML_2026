@@ -155,6 +155,10 @@ for i in range(4):
 
 part3 = pd.DataFrame(rows)
 
+#smallest test error is going to be here, find it
+smallest_test_error = part3[part3['Test Misclass. Error'] == part3['Test Misclass. Error'].min()]
+print(smallest_test_error)
+
 #need to send this table to LATEX
 LATEX_table = part3.to_latex(
     index=False,
@@ -226,6 +230,7 @@ for d in depths:
             #extract the one that we want
             holder = temp[(temp["Label"] == label) & (temp["k"] == k)]
 
+            #plot the single curve and give it the appropiate label
             plt.plot(
                 holder["n_estimators"].values,
                 holder["Test Misclass. Error"].values,
@@ -237,9 +242,33 @@ for d in depths:
     plt.ylabel("Test Misclassification Error")
     plt.title(f"Gradient Boosting: Test Error vs n (max_depth = {d})")
     plt.grid(True, linestyle="--", alpha=0.4)
-    plt.legend(fontsize=8, ncol=2)
-    plt.show()  
+    #legend was too crowded
+    plt.legend(
+        fontsize=8,
+        ncol=1,
+        bbox_to_anchor=(1.02, 1),
+        loc="upper left",
+        borderaxespad=0
+    )
+    plt.tight_layout()
+    #plt.show()
+    plt.savefig(f"assignments/hw06/figures/gb_test_error_depth_{d}.png", dpi=400, bbox_inches="tight")
+    plt.close()  
 
-#need to find row containing the smallest test error
+#need to find row containing the smallest test error.  Returns all rows, so if there are ties, 
+#we'd see them
 smallest_test_error = results_d[results_d['Test Misclass. Error'] == results_d['Test Misclass. Error'].min()]
-print(smallest_test_error)
+
+#save this to LATEX
+#need to send this table to LATEX
+LATEX_table = smallest_test_error.to_latex(
+    index=False,
+    caption=None,
+    label=None,
+    column_format="c" * smallest_test_error.shape[1],
+    escape=True
+)
+
+#save latex table
+with open("assignments/hw06/output/smallest_test_error.tex", "w") as f:
+    f.write(LATEX_table)
