@@ -4,7 +4,8 @@ from scipy.io import loadmat
 import torch
 from torch import nn
 from torch.utils.data import TensorDataset, DataLoader
-import torch.optim as optim 
+import torch.optim as optim
+import matplotlib.pyplot as plt 
 
 #https://pytorch.org/get-started/locally/
 #https://docs.pytorch.org/tutorials/beginner/basics/buildmodel_tutorial.html
@@ -78,13 +79,18 @@ model = nn.Sequential(
 #https://docs.pytorch.org/docs/stable/generated/torch.optim.SGD.html
 optimizer = optim.SGD(model.parameters(), momentum=0.9, lr = 0.01)
 
+training_values = []
+test_values = []
+
 #iterating over epochs.
 #https://codesignal.com/learn/courses/building-a-neural-network-in-pytorch/lessons/training-a-neural-network-model-with-pytorch
 #I think this dual loop works? https://discuss.pytorch.org/t/iterating-through-a-dataloader-object/25437
 for epoch in range(epochs_to_use):
-
+    #Training
     #train model once per epoch
     model.train()
+    train_correct = 0
+    train_total = 0
 
     for x_batch, y_batch in train_load:
 
@@ -107,15 +113,250 @@ for epoch in range(epochs_to_use):
         #optimize the model parameters
         optimizer.step()
 
-    if (epoch+1) % 10 == 0:
-        print(f"Epoch {epoch+1}, Loss: {loss.item()}")  
+        #add compute train accuracy
+        outputs =  model(x_batch)
+        soft_outputs = torch.nn.functional.softmax(outputs, dim=1)
+        top_class = soft_outputs.topk(1, dim = 1)[1].squeeze()
 
-#predictions
-model.eval()
+        train_correct = train_correct + (top_class == y_batch).sum().item()
+        train_total = train_total + y_batch.size(0)
 
-with torch.no_grad():
-    for x_batch, y_batch in test_load:
+    train_acc = train_correct / train_total
+
+    #Testing now
+    #predictions
+    # #https://discuss.pytorch.org/t/obtain-probabilities-from-cross-entropy-loss/157259
+    model.eval()
+    test_correct = 0
+    test_total = 0
+
+    with torch.no_grad():
+        for x_batch, y_batch in test_load:
+            x_batch = x_batch.to(device)
+            y_batch = y_batch.to(device)
+
+            #want predicted class labels
+            outputs =  model(x_batch)
+            soft_outputs = torch.nn.functional.softmax(outputs, dim=1)
+            top_class = soft_outputs.topk(1, dim = 1)[1].squeeze()
+
+            test_correct = test_correct + (top_class == y_batch).sum().item()
+            test_total = test_total + y_batch.size(0)
+
+    test_acc = test_correct / test_total
+
+    #append values to empty lists
+    training_values.append(train_acc)
+    test_values.append(test_acc)
+
+    if (epoch + 1) % 10 == 0:
+        print(f"Epoch {epoch+1:3d} | Train acc: {train_acc:.4f} | Test acc: {test_acc:.4f}") 
+
+#plotting this now
+plt.figure()
+plt.plot(range(epochs_to_use), training_values, label="Train Accuracy")
+plt.plot(range(epochs_to_use), test_values, label="Test Accuracy")
+plt.xlabel("Epoch")
+plt.ylabel("Accuracy")
+plt.title("Train and Test Accuracy vs Epoch\nOne Hidden Layer, 256 neurons, ReLu Activation")
+plt.legend()
+plt.grid(True)
+plt.tight_layout()
+plt.show()
+
+
+
+#part b.  two hidden layers, each with 64 neurons, ReLU activation
+model = nn.Sequential(
+    nn.Linear(256, 64),
+    nn.ReLU(),
+    nn.Linear(64, 64),
+    nn.ReLU(),
+    nn.Linear(64, 10)
+).to(device)
+
+optimizer = optim.SGD(model.parameters(), momentum=0.9, lr = 0.01)
+training_values = []
+test_values = []
+
+#iterating over epochs.
+#https://codesignal.com/learn/courses/building-a-neural-network-in-pytorch/lessons/training-a-neural-network-model-with-pytorch
+#I think this dual loop works? https://discuss.pytorch.org/t/iterating-through-a-dataloader-object/25437
+for epoch in range(epochs_to_use):
+    #Training
+    #train model once per epoch
+    model.train()
+    train_correct = 0
+    train_total = 0
+
+    for x_batch, y_batch in train_load:
+
+        #send data to CUDA device
         x_batch = x_batch.to(device)
         y_batch = y_batch.to(device)
 
-        #want predicted class labels
+        #set gradients to 0
+        optimizer.zero_grad()
+
+        #forward pass
+        outputs = model(x_batch)
+
+        #compute the loss
+        loss = criterion(outputs, y_batch)
+
+        #backward pass
+        loss.backward()
+
+        #optimize the model parameters
+        optimizer.step()
+
+        #add compute train accuracy
+        outputs =  model(x_batch)
+        soft_outputs = torch.nn.functional.softmax(outputs, dim=1)
+        top_class = soft_outputs.topk(1, dim = 1)[1].squeeze()
+
+        train_correct = train_correct + (top_class == y_batch).sum().item()
+        train_total = train_total + y_batch.size(0)
+
+    train_acc = train_correct / train_total
+
+    #Testing now
+    #predictions
+    # #https://discuss.pytorch.org/t/obtain-probabilities-from-cross-entropy-loss/157259
+    model.eval()
+    test_correct = 0
+    test_total = 0
+
+    with torch.no_grad():
+        for x_batch, y_batch in test_load:
+            x_batch = x_batch.to(device)
+            y_batch = y_batch.to(device)
+
+            #want predicted class labels
+            outputs =  model(x_batch)
+            soft_outputs = torch.nn.functional.softmax(outputs, dim=1)
+            top_class = soft_outputs.topk(1, dim = 1)[1].squeeze()
+
+            test_correct = test_correct + (top_class == y_batch).sum().item()
+            test_total = test_total + y_batch.size(0)
+
+    test_acc = test_correct / test_total
+
+    #append values to empty lists
+    training_values.append(train_acc)
+    test_values.append(test_acc)
+
+    if (epoch + 1) % 10 == 0:
+        print(f"Epoch {epoch+1:3d} | Train acc: {train_acc:.4f} | Test acc: {test_acc:.4f}") 
+
+#plotting this now
+plt.figure()
+plt.plot(range(epochs_to_use), training_values, label="Train Accuracy")
+plt.plot(range(epochs_to_use), test_values, label="Test Accuracy")
+plt.xlabel("Epoch")
+plt.ylabel("Accuracy")
+plt.title("Train and Test Accuracy vs Epoch\nTwo Hidden Layers, 64 neurons each, ReLu Activation")
+plt.legend()
+plt.grid(True)
+plt.tight_layout()
+plt.show()
+
+
+#part c.  one hidden layer, 32 filters of size 15.
+model = nn.Sequential(
+    nn.Conv1d(
+        in_channels=1,
+        out_channels=32,
+        kernel_size=15
+    ),
+    nn.ReLU(),
+    nn.Linear(64, 64),
+    nn.ReLU(),
+    nn.Linear(64, 10)
+).to(device)
+
+optimizer = optim.SGD(model.parameters(), momentum=0.9, lr = 0.01)
+training_values = []
+test_values = []
+
+#iterating over epochs.
+#https://codesignal.com/learn/courses/building-a-neural-network-in-pytorch/lessons/training-a-neural-network-model-with-pytorch
+#I think this dual loop works? https://discuss.pytorch.org/t/iterating-through-a-dataloader-object/25437
+for epoch in range(epochs_to_use):
+    #Training
+    #train model once per epoch
+    model.train()
+    train_correct = 0
+    train_total = 0
+
+    for x_batch, y_batch in train_load:
+
+        #send data to CUDA device
+        x_batch = x_batch.to(device)
+        y_batch = y_batch.to(device)
+
+        #set gradients to 0
+        optimizer.zero_grad()
+
+        #forward pass
+        outputs = model(x_batch)
+
+        #compute the loss
+        loss = criterion(outputs, y_batch)
+
+        #backward pass
+        loss.backward()
+
+        #optimize the model parameters
+        optimizer.step()
+
+        #add compute train accuracy
+        outputs =  model(x_batch)
+        soft_outputs = torch.nn.functional.softmax(outputs, dim=1)
+        top_class = soft_outputs.topk(1, dim = 1)[1].squeeze()
+
+        train_correct = train_correct + (top_class == y_batch).sum().item()
+        train_total = train_total + y_batch.size(0)
+
+    train_acc = train_correct / train_total
+
+    #Testing now
+    #predictions
+    # #https://discuss.pytorch.org/t/obtain-probabilities-from-cross-entropy-loss/157259
+    model.eval()
+    test_correct = 0
+    test_total = 0
+
+    with torch.no_grad():
+        for x_batch, y_batch in test_load:
+            x_batch = x_batch.to(device)
+            y_batch = y_batch.to(device)
+
+            #want predicted class labels
+            outputs =  model(x_batch)
+            soft_outputs = torch.nn.functional.softmax(outputs, dim=1)
+            top_class = soft_outputs.topk(1, dim = 1)[1].squeeze()
+
+            test_correct = test_correct + (top_class == y_batch).sum().item()
+            test_total = test_total + y_batch.size(0)
+
+    test_acc = test_correct / test_total
+
+    #append values to empty lists
+    training_values.append(train_acc)
+    test_values.append(test_acc)
+
+    if (epoch + 1) % 10 == 0:
+        print(f"Epoch {epoch+1:3d} | Train acc: {train_acc:.4f} | Test acc: {test_acc:.4f}") 
+
+#plotting this now
+plt.figure()
+plt.plot(range(epochs_to_use), training_values, label="Train Accuracy")
+plt.plot(range(epochs_to_use), test_values, label="Test Accuracy")
+plt.xlabel("Epoch")
+plt.ylabel("Accuracy")
+plt.title("Train and Test Accuracy vs Epoch\nTwo Hidden Layers, 64 neurons each, ReLu Activation")
+plt.legend()
+plt.grid(True)
+plt.tight_layout()
+plt.show()
