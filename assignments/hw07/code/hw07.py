@@ -8,6 +8,13 @@ from scipy.io import loadmat
 import torch
 from torch import nn
 
+#checking torch stuff
+print(torch.cuda.is_available())
+print(torch.cuda.device_count())
+print(torch.cuda.current_device())
+print(torch.cuda.device(0))
+print(torch.cuda.get_device_name(0))
+
 #a single .mat file
 mat = loadmat("assignments/hw07/data/cnnslm3000.mat")
 
@@ -18,8 +25,4 @@ xtest = mat["xtest"]
 ytest = mat["ytest"]
 
 #part a
-print(torch.cuda.is_available())
-
-#which device are we using
-device = torch.accelerator.current_accelerator().type if torch.accelerator.is_available() else "cpu"
-print(f"Using {device} device")
+print("x:", x.shape, x.dtype, "y:", y.shape, y.dtype)
