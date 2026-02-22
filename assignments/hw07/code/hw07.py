@@ -67,6 +67,8 @@ test_load = DataLoader(
     shuffle=False
 )
 
+print(x_tensor[0].numel())
+
 #part a.  1 hidden layer + ReLU 256 neurons
 #defining model AND sending it to CUDA device
 model = nn.Sequential(
@@ -263,16 +265,13 @@ plt.show()
 
 
 #part c.  one hidden layer, 32 filters of size 15.
+#output length is Size of Data - Size of Kernel  + 1: 256-15+1
+#Conv1d.  Issues with the dimensions.  
 model = nn.Sequential(
-    nn.Conv1d(
-        in_channels=1,
-        out_channels=32,
-        kernel_size=15
-    ),
+    nn.Conv1d(in_channels=1, out_channels=32, kernel_size=15),
     nn.ReLU(),
-    nn.Linear(64, 64),
-    nn.ReLU(),
-    nn.Linear(64, 10)
+    nn.Flatten(),
+    nn.Linear(32*242, 10)
 ).to(device)
 
 optimizer = optim.SGD(model.parameters(), momentum=0.9, lr = 0.01)
@@ -355,7 +354,7 @@ plt.plot(range(epochs_to_use), training_values, label="Train Accuracy")
 plt.plot(range(epochs_to_use), test_values, label="Test Accuracy")
 plt.xlabel("Epoch")
 plt.ylabel("Accuracy")
-plt.title("Train and Test Accuracy vs Epoch\nTwo Hidden Layers, 64 neurons each, ReLu Activation")
+plt.title("Train and Test Accuracy vs Epoch\n CNN One Hidden Layer, 32 filters, Size 15, ReLu Activation")
 plt.legend()
 plt.grid(True)
 plt.tight_layout()
