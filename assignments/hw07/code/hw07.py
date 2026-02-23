@@ -801,8 +801,8 @@ plt.title("Train and Test Accuracy vs Epoch\n CNN Three Hidden Layers, 16 filter
 plt.legend()
 plt.grid(True)
 plt.tight_layout()
-#plt.savefig("assignments/hw07/figures/part_f.png", dpi=400, bbox_inches="tight")
-#plt.close()
-plt.show()
+plt.savefig("assignments/hw07/figures/part_g.png", dpi=400, bbox_inches="tight")
+plt.close()
+#plt.show()
 
 #800 lines is a lot.  Gotta be a better way to loop this
