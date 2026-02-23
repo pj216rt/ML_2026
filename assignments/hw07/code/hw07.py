@@ -282,8 +282,7 @@ parts_c_g = [
             nn.ReLU(),
             #input size 256.  Kernel size 15.  256-15=242.
             #across entire size of map
-            #https://medium.com/@minhazc.engg/padding-and-strides-in-cnn-58dc56493887.  Stride 242
-            #
+            #https://medium.com/@minhazc.engg/padding-and-strides-in-cnn-58dc56493887.  Stride = kernel size = global pooling
             nn.MaxPool1d(kernel_size=242, stride=242),
             nn.Flatten(),
             nn.Linear(32, 10)
