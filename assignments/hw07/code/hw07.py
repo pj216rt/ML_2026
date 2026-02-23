@@ -41,7 +41,7 @@ test_load  = DataLoader(TensorDataset(xtest, ytest), batch_size=batch_size, shuf
 
 #function for reuse
 #training the data.
-def run_NN_train(model, loader, optimizer, device):
+def run_NN_train(model, loader, optimizer, criterion, device):
     model.train()
     correct, total = 0, 0
 
@@ -97,10 +97,9 @@ def run_all(model, training_data, testing_data, device, epochs=100, lr=0.01,
     criterion = nn.CrossEntropyLoss()
 
     train_accs, test_accs = [], []
-    print("Hello")
     for epoch in range(epochs):
         #for each epoch, train and test
-        train_acc = run_NN_train(model, train_load, optimizer, device)
+        train_acc = run_NN_train(model, train_load, optimizer, criterion=criterion, device=device)
         test_acc  = run_NN_test(model, test_load, device)
 
         train_accs.append(train_acc)
@@ -111,8 +110,8 @@ def run_all(model, training_data, testing_data, device, epochs=100, lr=0.01,
 
     #plotting stuff
     plt.figure()
-    plt.plot(range(epochs_to_use), train_accs, label="Train Accuracy")
-    plt.plot(range(epochs_to_use), test_accs, label="Test Accuracy")
+    plt.plot(range(epochs), train_accs, label="Train Accuracy")
+    plt.plot(range(epochs), test_accs, label="Test Accuracy")
     plt.xlabel("Epoch")
     plt.ylabel("Accuracy")
     plt.title(plot_title)
@@ -154,6 +153,7 @@ parts_a_b = [
 #parts a and b
 results = []
 for item in parts_a_b:
+    print(item["name"])
     train_accuracy, test_accuracy = run_all(
         model=item["model"],
         training_data=train_load, testing_data=test_load,
@@ -169,7 +169,7 @@ for item in parts_a_b:
 
 
 
-def run_CNN_train(model, loader, optimizer, device):
+def run_CNN_train(model, loader, optimizer, criterion, device):
     model.train()
     correct, total = 0, 0
 
@@ -227,10 +227,9 @@ def run_all_CNN(model, training_data, testing_data, device, epochs=100, lr=0.01,
     criterion = nn.CrossEntropyLoss()
 
     train_accs, test_accs = [], []
-    print("Hello")
     for epoch in range(epochs):
         #for each epoch, train and test
-        train_acc = run_CNN_train(model, train_load, optimizer, device)
+        train_acc = run_CNN_train(model, train_load, optimizer, criterion=criterion, device=device)
         test_acc  = run_CNN_test(model, test_load, device)
 
         train_accs.append(train_acc)
@@ -336,6 +335,7 @@ parts_c_g = [
 #parts c through g
 results_cnn = []
 for item in parts_c_g:
+    print(item["name"])
     train_accuracy, test_accuracy = run_all_CNN(
         model=item["model"],
         training_data=train_load, testing_data=test_load,
@@ -348,3 +348,7 @@ for item in parts_c_g:
         "final_train_acc": train_accuracy[-1],
         "final_test_acc": test_accuracy[-1]
     })
+
+#part h.  One big table
+total_results = pd.DataFrame(results + results_cnn)
+print(total_results)
