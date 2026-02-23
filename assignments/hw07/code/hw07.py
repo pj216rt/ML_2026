@@ -73,23 +73,24 @@ def run_NN_test(model, loader, device):
     correct, total = 0,0
 
     #batches
-    for x_batch, y_batch in loader:
-        x_batch = x_batch.to(device)
-        y_batch = y_batch.to(device)
+    with torch.no_grad():
+        for x_batch, y_batch in loader:
+            x_batch = x_batch.to(device)
+            y_batch = y_batch.to(device)
 
-        #want predicted class labels
-        outputs =  model(x_batch)
-        soft_outputs = torch.nn.functional.softmax(outputs, dim=1)
-        top_class = soft_outputs.topk(1, dim = 1)[1].squeeze()
+            #want predicted class labels
+            outputs =  model(x_batch)
+            soft_outputs = torch.nn.functional.softmax(outputs, dim=1)
+            top_class = soft_outputs.topk(1, dim = 1)[1].squeeze()
 
-        correct = correct + (top_class == y_batch).sum().item()
-        total = total + y_batch.size(0)
-
-    return (correct/total)
+            correct = correct + (top_class == y_batch).sum().item()
+            total = total + y_batch.size(0)
+            
+        return (correct/total)
 
 #function to train and plot
 def run_all(model, training_data, testing_data, device, epochs=100, lr=0.01,
-            momentum=0.9, print_option = 10):
+            momentum=0.9, print_option = 10, image_saved_path=None, plot_title=""):
     #send model to CUDA device, setting optimizer, and criterion
     model = model.to(device)
     optimizer = optim.SGD(model.parameters(), lr=lr, momentum=momentum)
@@ -97,8 +98,33 @@ def run_all(model, training_data, testing_data, device, epochs=100, lr=0.01,
 
     train_accs, test_accs = [], []
     print("Hello")
+    for epoch in range(epochs):
+        #for each epoch, train and test
+        train_acc = run_NN_train(model, train_load, optimizer, device)
+        test_acc  = run_NN_test(model, test_load, device)
 
-#information for a loop
+        train_accs.append(train_acc)
+        test_accs.append(test_acc)
+
+        if (epoch + 1) % print_option == 0:
+            print(f"Epoch {epoch+1:3d} | Train acc: {train_acc:.4f} | Test acc: {test_acc:.4f}")
+
+    #plotting stuff
+    plt.figure()
+    plt.plot(range(epochs_to_use), train_accs, label="Train Accuracy")
+    plt.plot(range(epochs_to_use), test_accs, label="Test Accuracy")
+    plt.xlabel("Epoch")
+    plt.ylabel("Accuracy")
+    plt.title(plot_title)
+    plt.legend()
+    plt.grid(True)
+    plt.tight_layout()
+    plt.savefig(image_saved_path, dpi=400, bbox_inches="tight")
+    plt.close()
+
+    return train_accs, test_accs
+
+#information for a loop.  List of Dicts
 parts_a_b = [
     dict(
         name="part_a",
@@ -124,275 +150,61 @@ parts_a_b = [
     )
 ]
 
-#part a.  1 hidden layer + ReLU 256 neurons
-#defining model AND sending it to CUDA device
-model = nn.Sequential(
-    nn.Linear(256, 256),
-    nn.ReLU(),
-    nn.Linear(256, 10)
-).to(device)
 
-#need model defined first.  hmmm  lr required, but documentation shows default is 1e-3
-#https://docs.pytorch.org/docs/stable/generated/torch.optim.SGD.html
-optimizer = optim.SGD(model.parameters(), momentum=0.9, lr = 0.01)
+#parts a and b
+results = []
+for item in parts_a_b:
+    train_accuracy, test_accuracy = run_all(
+        model=item["model"],
+        training_data=train_load, testing_data=test_load,
+        device=device, plot_title=item["title"], image_saved_path=item["save_path"], print_option=25
+    )
 
-training_values = []
-test_values = []
+    #add to the results object the final train and test accuracies
+    results.append({
+        "model": item["name"],
+        "final_train_acc": train_accuracy[-1],
+        "final_test_acc": test_accuracy[-1]
+    })
 
-#iterating over epochs.
-#https://codesignal.com/learn/courses/building-a-neural-network-in-pytorch/lessons/training-a-neural-network-model-with-pytorch
-#I think this dual loop works? https://discuss.pytorch.org/t/iterating-through-a-dataloader-object/25437
-for epoch in range(epochs_to_use):
-    #Training
-    #train model once per epoch
+
+
+def run_CNN_train(model, loader, optimizer, device):
     model.train()
-    train_correct = 0
-    train_total = 0
+    correct, total = 0, 0
 
-    for x_batch, y_batch in train_load:
-
-        #send data to CUDA device
+    #batchs
+    for x_batch, y_batch in loader:
         x_batch = x_batch.to(device)
-        y_batch = y_batch.to(device)
-
-        #set gradients to 0
-        optimizer.zero_grad()
-
-        #forward pass
-        outputs = model(x_batch)
-
-        #compute the loss
-        loss = criterion(outputs, y_batch)
-
-        #backward pass
-        loss.backward()
-
-        #optimize the model parameters
-        optimizer.step()
-
-        #add compute train accuracy
-        #outputs =  model(x_batch)
-        soft_outputs = torch.nn.functional.softmax(outputs, dim=1)
-        top_class = soft_outputs.topk(1, dim = 1)[1].squeeze()
-
-        train_correct = train_correct + (top_class == y_batch).sum().item()
-        train_total = train_total + y_batch.size(0)
-
-    train_acc = train_correct / train_total
-
-    #Testing now
-    #predictions
-    # #https://discuss.pytorch.org/t/obtain-probabilities-from-cross-entropy-loss/157259
-    model.eval()
-    test_correct = 0
-    test_total = 0
-
-    with torch.no_grad():
-        for x_batch, y_batch in test_load:
-            x_batch = x_batch.to(device)
-            y_batch = y_batch.to(device)
-
-            #want predicted class labels
-            outputs =  model(x_batch)
-            soft_outputs = torch.nn.functional.softmax(outputs, dim=1)
-            top_class = soft_outputs.topk(1, dim = 1)[1].squeeze()
-
-            test_correct = test_correct + (top_class == y_batch).sum().item()
-            test_total = test_total + y_batch.size(0)
-
-    test_acc = test_correct / test_total
-
-    #append values to empty lists
-    training_values.append(train_acc)
-    test_values.append(test_acc)
-
-    if (epoch + 1) % 10 == 0:
-        print(f"Epoch {epoch+1:3d} | Train acc: {train_acc:.4f} | Test acc: {test_acc:.4f}") 
-
-#plotting this now
-plt.figure()
-plt.plot(range(epochs_to_use), training_values, label="Train Accuracy")
-plt.plot(range(epochs_to_use), test_values, label="Test Accuracy")
-plt.xlabel("Epoch")
-plt.ylabel("Accuracy")
-plt.title("Train and Test Accuracy vs Epoch\nOne Hidden Layer, 256 neurons, ReLu Activation")
-plt.legend()
-plt.grid(True)
-plt.tight_layout()
-plt.savefig("assignments/hw07/figures/part_a.png", dpi=400, bbox_inches="tight")
-plt.close()
-# plt.show()
-
-
-
-#part b.  two hidden layers, each with 64 neurons, ReLU activation
-model = nn.Sequential(
-    nn.Linear(256, 64),
-    nn.ReLU(),
-    nn.Linear(64, 64),
-    nn.ReLU(),
-    nn.Linear(64, 10)
-).to(device)
-
-optimizer = optim.SGD(model.parameters(), momentum=0.9, lr = 0.01)
-training_values = []
-test_values = []
-
-#iterating over epochs.
-#https://codesignal.com/learn/courses/building-a-neural-network-in-pytorch/lessons/training-a-neural-network-model-with-pytorch
-#I think this dual loop works? https://discuss.pytorch.org/t/iterating-through-a-dataloader-object/25437
-for epoch in range(epochs_to_use):
-    #Training
-    #train model once per epoch
-    model.train()
-    train_correct = 0
-    train_total = 0
-
-    for x_batch, y_batch in train_load:
-
-        #send data to CUDA device
-        x_batch = x_batch.to(device)
-        y_batch = y_batch.to(device)
-
-        #set gradients to 0
-        optimizer.zero_grad()
-
-        #forward pass
-        outputs = model(x_batch)
-
-        #compute the loss
-        loss = criterion(outputs, y_batch)
-
-        #backward pass
-        loss.backward()
-
-        #optimize the model parameters
-        optimizer.step()
-
-        #add compute train accuracy
-        #outputs =  model(x_batch)
-        soft_outputs = torch.nn.functional.softmax(outputs, dim=1)
-        top_class = soft_outputs.topk(1, dim = 1)[1].squeeze()
-
-        train_correct = train_correct + (top_class == y_batch).sum().item()
-        train_total = train_total + y_batch.size(0)
-
-    train_acc = train_correct / train_total
-
-    #Testing now
-    #predictions
-    # #https://discuss.pytorch.org/t/obtain-probabilities-from-cross-entropy-loss/157259
-    model.eval()
-    test_correct = 0
-    test_total = 0
-
-    with torch.no_grad():
-        for x_batch, y_batch in test_load:
-            x_batch = x_batch.to(device)
-            y_batch = y_batch.to(device)
-
-            #want predicted class labels
-            outputs =  model(x_batch)
-            soft_outputs = torch.nn.functional.softmax(outputs, dim=1)
-            top_class = soft_outputs.topk(1, dim = 1)[1].squeeze()
-
-            test_correct = test_correct + (top_class == y_batch).sum().item()
-            test_total = test_total + y_batch.size(0)
-
-    test_acc = test_correct / test_total
-
-    #append values to empty lists
-    training_values.append(train_acc)
-    test_values.append(test_acc)
-
-    if (epoch + 1) % 10 == 0:
-        print(f"Epoch {epoch+1:3d} | Train acc: {train_acc:.4f} | Test acc: {test_acc:.4f}") 
-
-#plotting this now
-plt.figure()
-plt.plot(range(epochs_to_use), training_values, label="Train Accuracy")
-plt.plot(range(epochs_to_use), test_values, label="Test Accuracy")
-plt.xlabel("Epoch")
-plt.ylabel("Accuracy")
-plt.title("Train and Test Accuracy vs Epoch\nTwo Hidden Layers, 64 neurons each, ReLu Activation")
-plt.legend()
-plt.grid(True)
-plt.tight_layout()
-plt.savefig("assignments/hw07/figures/part_b.png", dpi=400, bbox_inches="tight")
-plt.close()
-#plt.show()
-
-
-#part c.  one hidden layer, 32 filters of size 15.
-#output length is Size of Data - Size of Kernel  + 1: 256-15+1
-#Conv1d.  Issues with the dimensions.  Conv1d needs the data to be
-#shaped differently
-model = nn.Sequential(
-    nn.Conv1d(in_channels=1, out_channels=32, kernel_size=15),
-    nn.ReLU(),
-    nn.Flatten(),
-    nn.Linear(32*242, 10)
-).to(device)
-
-optimizer = optim.SGD(model.parameters(), momentum=0.9, lr = 0.01)
-training_values = []
-test_values = []
-
-#iterating over epochs.
-#https://codesignal.com/learn/courses/building-a-neural-network-in-pytorch/lessons/training-a-neural-network-model-with-pytorch
-#I think this dual loop works? https://discuss.pytorch.org/t/iterating-through-a-dataloader-object/25437
-for epoch in range(epochs_to_use):
-    #Training
-    #train model once per epoch
-    model.train()
-    train_correct = 0
-    train_total = 0
-
-    for x_batch, y_batch in train_load:
-
-        #send data to CUDA device.  #Need (N, C_in, L)
-        #https://docs.pytorch.org/docs/stable/generated/torch.nn.Conv1d.html
-        x_batch = x_batch.to(device)
-        y_batch = y_batch.to(device)
-
         x_batch = x_batch.unsqueeze(1)
+        y_batch = y_batch.to(device)
 
-        #set gradients to 0
+        #set gradients to 0, forward pass, compute the losee
+        #backward pass, then update model parameters
         optimizer.zero_grad()
-        
-        #forward pass
         outputs = model(x_batch)
-
-        #compute the loss
         loss = criterion(outputs, y_batch)
-
-        #backward pass
         loss.backward()
-
-        #optimize the model parameters
         optimizer.step()
 
-        #add compute train accuracy
-        #outputs =  model(x_batch)
+        #make predictions
         soft_outputs = torch.nn.functional.softmax(outputs, dim=1)
         top_class = soft_outputs.topk(1, dim = 1)[1].squeeze()
 
-        train_correct = train_correct + (top_class == y_batch).sum().item()
-        train_total = train_total + y_batch.size(0)
+        correct = correct + (top_class == y_batch).sum().item()
+        total = total + y_batch.size(0)
 
-    train_acc = train_correct / train_total
+    return (correct/total)
 
-    #Testing now
-    #predictions
-    # #https://discuss.pytorch.org/t/obtain-probabilities-from-cross-entropy-loss/157259
+#function for testing the data.  Don't need optimizer anymore?
+def run_CNN_test(model, loader, device):
     model.eval()
-    test_correct = 0
-    test_total = 0
+    correct, total = 0,0
 
+    #batches.  Change here as opposed to the NN
     with torch.no_grad():
-        for x_batch, y_batch in test_load:
+        for x_batch, y_batch in loader:
             x_batch = x_batch.to(device)
-
             x_batch = x_batch.unsqueeze(1)
             y_batch = y_batch.to(device)
 
@@ -401,463 +213,138 @@ for epoch in range(epochs_to_use):
             soft_outputs = torch.nn.functional.softmax(outputs, dim=1)
             top_class = soft_outputs.topk(1, dim = 1)[1].squeeze()
 
-            test_correct = test_correct + (top_class == y_batch).sum().item()
-            test_total = test_total + y_batch.size(0)
-
-    test_acc = test_correct / test_total
-
-    #append values to empty lists
-    training_values.append(train_acc)
-    test_values.append(test_acc)
-
-    if (epoch + 1) % 10 == 0:
-        print(f"Epoch {epoch+1:3d} | Train acc: {train_acc:.4f} | Test acc: {test_acc:.4f}") 
-
-#plotting this now
-plt.figure()
-plt.plot(range(epochs_to_use), training_values, label="Train Accuracy")
-plt.plot(range(epochs_to_use), test_values, label="Test Accuracy")
-plt.xlabel("Epoch")
-plt.ylabel("Accuracy")
-plt.title("Train and Test Accuracy vs Epoch\n CNN One Hidden Layer, 32 filters, Size 15, ReLu Activation")
-plt.legend()
-plt.grid(True)
-plt.tight_layout()
-plt.savefig("assignments/hw07/figures/part_c.png", dpi=400, bbox_inches="tight")
-plt.close()
-#plt.show()
-
-#part d
-#adding a max pooling size 2, stride 2.  
-#https://docs.pytorch.org/docs/stable/generated/torch.nn.MaxPool1d.html
-#ned to change the dimension of the nn.Linear component
-#https://docs.pytorch.org/docs/stable/generated/torch.nn.LazyLinear.html
-model = nn.Sequential(
-    nn.Conv1d(in_channels=1, out_channels=32, kernel_size=15),
-    nn.ReLU(),
-    nn.MaxPool1d(kernel_size=2, stride=2),
-    nn.Flatten(),
-    nn.LazyLinear(10)
-).to(device)
-
-optimizer = optim.SGD(model.parameters(), momentum=0.9, lr = 0.01)
-training_values = []
-test_values = []
-
-#iterating over epochs.
-#https://codesignal.com/learn/courses/building-a-neural-network-in-pytorch/lessons/training-a-neural-network-model-with-pytorch
-#I think this dual loop works? https://discuss.pytorch.org/t/iterating-through-a-dataloader-object/25437
-for epoch in range(epochs_to_use):
-    #Training
-    #train model once per epoch
-    model.train()
-    train_correct = 0
-    train_total = 0
-
-    for x_batch, y_batch in train_load:
-
-        #send data to CUDA device.  #Need (N, C_in, L)
-        #https://docs.pytorch.org/docs/stable/generated/torch.nn.Conv1d.html
-        x_batch = x_batch.to(device)
-        y_batch = y_batch.to(device)
-
-        x_batch = x_batch.unsqueeze(1)
-
-        #set gradients to 0
-        optimizer.zero_grad()
-        
-        #forward pass
-        outputs = model(x_batch)
-
-        #compute the loss
-        loss = criterion(outputs, y_batch)
-
-        #backward pass
-        loss.backward()
-
-        #optimize the model parameters
-        optimizer.step()
-
-        #add compute train accuracy
-        #outputs =  model(x_batch)
-        soft_outputs = torch.nn.functional.softmax(outputs, dim=1)
-        top_class = soft_outputs.topk(1, dim = 1)[1].squeeze()
-
-        train_correct = train_correct + (top_class == y_batch).sum().item()
-        train_total = train_total + y_batch.size(0)
-
-    train_acc = train_correct / train_total
-
-    #Testing now
-    #predictions
-    # #https://discuss.pytorch.org/t/obtain-probabilities-from-cross-entropy-loss/157259
-    model.eval()
-    test_correct = 0
-    test_total = 0
-
-    with torch.no_grad():
-        for x_batch, y_batch in test_load:
-            x_batch = x_batch.to(device)
-
-            x_batch = x_batch.unsqueeze(1)
-            y_batch = y_batch.to(device)
-
-            #want predicted class labels
-            outputs =  model(x_batch)
-            soft_outputs = torch.nn.functional.softmax(outputs, dim=1)
-            top_class = soft_outputs.topk(1, dim = 1)[1].squeeze()
-
-            test_correct = test_correct + (top_class == y_batch).sum().item()
-            test_total = test_total + y_batch.size(0)
-
-    test_acc = test_correct / test_total
-
-    #append values to empty lists
-    training_values.append(train_acc)
-    test_values.append(test_acc)
-
-    if (epoch + 1) % 10 == 0:
-        print(f"Epoch {epoch+1:3d} | Train acc: {train_acc:.4f} | Test acc: {test_acc:.4f}") 
-
-#plotting this now
-plt.figure()
-plt.plot(range(epochs_to_use), training_values, label="Train Accuracy")
-plt.plot(range(epochs_to_use), test_values, label="Test Accuracy")
-plt.xlabel("Epoch")
-plt.ylabel("Accuracy")
-plt.title("Train and Test Accuracy vs Epoch\n CNN One Hidden Layer, 32 filters, Size 15, ReLu Activation, Max Pool=2, Stride 2")
-plt.legend()
-plt.grid(True)
-plt.tight_layout()
-plt.savefig("assignments/hw07/figures/part_d.png", dpi=400, bbox_inches="tight")
-plt.close()
-#plt.show()
-
-#part e
-#max pooling over entire spatial output 1*32 output from the 32 filters 
-#after max pooling
-#https://docs.pytorch.org/docs/stable/generated/torch.nn.MaxPool1d.html
-model = nn.Sequential(
-    nn.Conv1d(in_channels=1, out_channels=32, kernel_size=15),
-    nn.ReLU(),
-    nn.MaxPool1d(kernel_size=242, stride=242),
-    nn.Flatten(),
-    nn.Linear(32, 10)
-).to(device)
-
-optimizer = optim.SGD(model.parameters(), momentum=0.9, lr = 0.01)
-training_values = []
-test_values = []
-
-#iterating over epochs.
-#https://codesignal.com/learn/courses/building-a-neural-network-in-pytorch/lessons/training-a-neural-network-model-with-pytorch
-#I think this dual loop works? https://discuss.pytorch.org/t/iterating-through-a-dataloader-object/25437
-for epoch in range(epochs_to_use):
-    #Training
-    #train model once per epoch
-    model.train()
-    train_correct = 0
-    train_total = 0
-
-    for x_batch, y_batch in train_load:
-
-        #send data to CUDA device.  #Need (N, C_in, L)
-        #https://docs.pytorch.org/docs/stable/generated/torch.nn.Conv1d.html
-        x_batch = x_batch.to(device)
-        y_batch = y_batch.to(device)
-
-        x_batch = x_batch.unsqueeze(1)
-
-        #set gradients to 0
-        optimizer.zero_grad()
-        
-        #forward pass
-        outputs = model(x_batch)
-
-        #compute the loss
-        loss = criterion(outputs, y_batch)
-
-        #backward pass
-        loss.backward()
-
-        #optimize the model parameters
-        optimizer.step()
-
-        #add compute train accuracy
-        #outputs =  model(x_batch)
-        soft_outputs = torch.nn.functional.softmax(outputs, dim=1)
-        top_class = soft_outputs.topk(1, dim = 1)[1].squeeze()
-
-        train_correct = train_correct + (top_class == y_batch).sum().item()
-        train_total = train_total + y_batch.size(0)
-
-    train_acc = train_correct / train_total
-
-    #Testing now
-    #predictions
-    # #https://discuss.pytorch.org/t/obtain-probabilities-from-cross-entropy-loss/157259
-    model.eval()
-    test_correct = 0
-    test_total = 0
-
-    with torch.no_grad():
-        for x_batch, y_batch in test_load:
-            x_batch = x_batch.to(device)
-
-            x_batch = x_batch.unsqueeze(1)
-            y_batch = y_batch.to(device)
-
-            #want predicted class labels
-            outputs =  model(x_batch)
-            soft_outputs = torch.nn.functional.softmax(outputs, dim=1)
-            top_class = soft_outputs.topk(1, dim = 1)[1].squeeze()
-
-            test_correct = test_correct + (top_class == y_batch).sum().item()
-            test_total = test_total + y_batch.size(0)
-
-    test_acc = test_correct / test_total
-
-    #append values to empty lists
-    training_values.append(train_acc)
-    test_values.append(test_acc)
-
-    if (epoch + 1) % 10 == 0:
-        print(f"Epoch {epoch+1:3d} | Train acc: {train_acc:.4f} | Test acc: {test_acc:.4f}") 
-
-#plotting this now
-plt.figure()
-plt.plot(range(epochs_to_use), training_values, label="Train Accuracy")
-plt.plot(range(epochs_to_use), test_values, label="Test Accuracy")
-plt.xlabel("Epoch")
-plt.ylabel("Accuracy")
-plt.title("Train and Test Accuracy vs Epoch\n CNN One Hidden Layer, 32 filters, Size 15, ReLu Activation, Max Pooling")
-plt.legend()
-plt.grid(True)
-plt.tight_layout()
-plt.savefig("assignments/hw07/figures/part_e.png", dpi=400, bbox_inches="tight")
-plt.close()
-#plt.show()
-
-#part f.  two hidden layers.  each with 16 filters of size 15 with ReLU, max pooling size 2, stride 2
-model = nn.Sequential(
-    nn.Conv1d(in_channels=1, out_channels=16, kernel_size=15),
-    nn.ReLU(),
-    nn.MaxPool1d(kernel_size=2, stride=2),
-
-    nn.Conv1d(in_channels=16, out_channels=16, kernel_size=15),
-    nn.ReLU(),
-    nn.MaxPool1d(kernel_size=2, stride=2),
-
-    nn.Flatten(),
-    nn.LazyLinear(10)
-).to(device)
-
-optimizer = optim.SGD(model.parameters(), momentum=0.9, lr = 0.01)
-training_values = []
-test_values = []
-
-#iterating over epochs.
-#https://codesignal.com/learn/courses/building-a-neural-network-in-pytorch/lessons/training-a-neural-network-model-with-pytorch
-#I think this dual loop works? https://discuss.pytorch.org/t/iterating-through-a-dataloader-object/25437
-for epoch in range(epochs_to_use):
-    #Training
-    #train model once per epoch
-    model.train()
-    train_correct = 0
-    train_total = 0
-
-    for x_batch, y_batch in train_load:
-
-        #send data to CUDA device.  #Need (N, C_in, L)
-        #https://docs.pytorch.org/docs/stable/generated/torch.nn.Conv1d.html
-        x_batch = x_batch.to(device)
-        y_batch = y_batch.to(device)
-
-        x_batch = x_batch.unsqueeze(1)
-
-        #set gradients to 0
-        optimizer.zero_grad()
-        
-        #forward pass
-        outputs = model(x_batch)
-
-        #compute the loss
-        loss = criterion(outputs, y_batch)
-
-        #backward pass
-        loss.backward()
-
-        #optimize the model parameters
-        optimizer.step()
-
-        #add compute train accuracy
-        #outputs =  model(x_batch)
-        soft_outputs = torch.nn.functional.softmax(outputs, dim=1)
-        top_class = soft_outputs.topk(1, dim = 1)[1].squeeze()
-
-        train_correct = train_correct + (top_class == y_batch).sum().item()
-        train_total = train_total + y_batch.size(0)
-
-    train_acc = train_correct / train_total
-
-    #Testing now
-    #predictions
-    # #https://discuss.pytorch.org/t/obtain-probabilities-from-cross-entropy-loss/157259
-    model.eval()
-    test_correct = 0
-    test_total = 0
-
-    with torch.no_grad():
-        for x_batch, y_batch in test_load:
-            x_batch = x_batch.to(device)
-
-            x_batch = x_batch.unsqueeze(1)
-            y_batch = y_batch.to(device)
-
-            #want predicted class labels
-            outputs =  model(x_batch)
-            soft_outputs = torch.nn.functional.softmax(outputs, dim=1)
-            top_class = soft_outputs.topk(1, dim = 1)[1].squeeze()
-
-            test_correct = test_correct + (top_class == y_batch).sum().item()
-            test_total = test_total + y_batch.size(0)
-
-    test_acc = test_correct / test_total
-
-    #append values to empty lists
-    training_values.append(train_acc)
-    test_values.append(test_acc)
-
-    if (epoch + 1) % 10 == 0:
-        print(f"Epoch {epoch+1:3d} | Train acc: {train_acc:.4f} | Test acc: {test_acc:.4f}") 
-
-#plotting this now
-plt.figure()
-plt.plot(range(epochs_to_use), training_values, label="Train Accuracy")
-plt.plot(range(epochs_to_use), test_values, label="Test Accuracy")
-plt.xlabel("Epoch")
-plt.ylabel("Accuracy")
-plt.title("Train and Test Accuracy vs Epoch\n CNN Two Hidden Layers, 16 filters, Size 15, ReLu Activation\nMax Pooling, Size 2, Stride 2")
-plt.legend()
-plt.grid(True)
-plt.tight_layout()
-plt.savefig("assignments/hw07/figures/part_f.png", dpi=400, bbox_inches="tight")
-plt.close()
-#plt.show()
-
-#part g
-#three hideen layers, each with 16 filkters, size 15, ReLU, max pooling size, stride 2.
-model = nn.Sequential(
-    #layer 1
-    nn.Conv1d(in_channels=1, out_channels=16, kernel_size=15),
-    nn.ReLU(),
-    nn.MaxPool1d(kernel_size=2, stride=2),
-
-    #layer 2
-    nn.Conv1d(in_channels=16, out_channels=16, kernel_size=15),
-    nn.ReLU(),
-    nn.MaxPool1d(kernel_size=2, stride=2),
-
-    #layer 3
-    nn.Conv1d(in_channels=16, out_channels=16, kernel_size=15),
-    nn.ReLU(),
-    nn.MaxPool1d(kernel_size=2, stride=2),
-
-    nn.Flatten(),
-    nn.LazyLinear(10)
-).to(device)
-
-optimizer = optim.SGD(model.parameters(), momentum=0.9, lr = 0.01)
-training_values = []
-test_values = []
-
-#iterating over epochs.
-#https://codesignal.com/learn/courses/building-a-neural-network-in-pytorch/lessons/training-a-neural-network-model-with-pytorch
-#I think this dual loop works? https://discuss.pytorch.org/t/iterating-through-a-dataloader-object/25437
-for epoch in range(epochs_to_use):
-    #Training
-    #train model once per epoch
-    model.train()
-    train_correct = 0
-    train_total = 0
-
-    for x_batch, y_batch in train_load:
-
-        #send data to CUDA device.  #Need (N, C_in, L)
-        #https://docs.pytorch.org/docs/stable/generated/torch.nn.Conv1d.html
-        x_batch = x_batch.to(device)
-        y_batch = y_batch.to(device)
-
-        x_batch = x_batch.unsqueeze(1)
-
-        #set gradients to 0
-        optimizer.zero_grad()
-        
-        #forward pass
-        outputs = model(x_batch)
-
-        #compute the loss
-        loss = criterion(outputs, y_batch)
-
-        #backward pass
-        loss.backward()
-
-        #optimize the model parameters
-        optimizer.step()
-
-        #add compute train accuracy
-        #outputs =  model(x_batch)
-        soft_outputs = torch.nn.functional.softmax(outputs, dim=1)
-        top_class = soft_outputs.topk(1, dim = 1)[1].squeeze()
-
-        train_correct = train_correct + (top_class == y_batch).sum().item()
-        train_total = train_total + y_batch.size(0)
-
-    train_acc = train_correct / train_total
-
-    #Testing now
-    #predictions
-    # #https://discuss.pytorch.org/t/obtain-probabilities-from-cross-entropy-loss/157259
-    model.eval()
-    test_correct = 0
-    test_total = 0
-
-    with torch.no_grad():
-        for x_batch, y_batch in test_load:
-            x_batch = x_batch.to(device)
-
-            x_batch = x_batch.unsqueeze(1)
-            y_batch = y_batch.to(device)
-
-            #want predicted class labels
-            outputs =  model(x_batch)
-            soft_outputs = torch.nn.functional.softmax(outputs, dim=1)
-            top_class = soft_outputs.topk(1, dim = 1)[1].squeeze()
-
-            test_correct = test_correct + (top_class == y_batch).sum().item()
-            test_total = test_total + y_batch.size(0)
-
-    test_acc = test_correct / test_total
-
-    #append values to empty lists
-    training_values.append(train_acc)
-    test_values.append(test_acc)
-
-    if (epoch + 1) % 10 == 0:
-        print(f"Epoch {epoch+1:3d} | Train acc: {train_acc:.4f} | Test acc: {test_acc:.4f}") 
-
-#plotting this now
-plt.figure()
-plt.plot(range(epochs_to_use), training_values, label="Train Accuracy")
-plt.plot(range(epochs_to_use), test_values, label="Test Accuracy")
-plt.xlabel("Epoch")
-plt.ylabel("Accuracy")
-plt.title("Train and Test Accuracy vs Epoch\n CNN Three Hidden Layers, 16 filters, Size 15, ReLu Activation\nMax Pooling, Size 2, Stride 2")
-plt.legend()
-plt.grid(True)
-plt.tight_layout()
-plt.savefig("assignments/hw07/figures/part_g.png", dpi=400, bbox_inches="tight")
-plt.close()
-#plt.show()
-
-#800 lines is a lot.  Gotta be a better way to loop this
+            correct = correct + (top_class == y_batch).sum().item()
+            total = total + y_batch.size(0)
+
+        return (correct/total)
+
+#function to train and plot
+def run_all_CNN(model, training_data, testing_data, device, epochs=100, lr=0.01,
+            momentum=0.9, print_option = 10, image_saved_path=None, plot_title=""):
+    #send model to CUDA device, setting optimizer, and criterion
+    model = model.to(device)
+    optimizer = optim.SGD(model.parameters(), lr=lr, momentum=momentum)
+    criterion = nn.CrossEntropyLoss()
+
+    train_accs, test_accs = [], []
+    print("Hello")
+    for epoch in range(epochs):
+        #for each epoch, train and test
+        train_acc = run_CNN_train(model, train_load, optimizer, device)
+        test_acc  = run_CNN_test(model, test_load, device)
+
+        train_accs.append(train_acc)
+        test_accs.append(test_acc)
+
+        if (epoch + 1) % print_option == 0:
+            print(f"Epoch {epoch+1:3d} | Train acc: {train_acc:.4f} | Test acc: {test_acc:.4f}")
+
+    #plotting stuff
+    plt.figure()
+    plt.plot(range(epochs_to_use), train_accs, label="Train Accuracy")
+    plt.plot(range(epochs_to_use), test_accs, label="Test Accuracy")
+    plt.xlabel("Epoch")
+    plt.ylabel("Accuracy")
+    plt.title(plot_title)
+    plt.legend()
+    plt.grid(True)
+    plt.tight_layout()
+    plt.savefig(image_saved_path, dpi=400, bbox_inches="tight")
+    plt.close()
+
+    return train_accs, test_accs
+
+parts_c_g = [
+    dict(
+        name="part_c",
+        model = nn.Sequential(
+            nn.Conv1d(in_channels=1, out_channels=32, kernel_size=15),
+            nn.ReLU(),
+            nn.Flatten(),
+            nn.Linear(32*242, 10)
+        ),
+        title="Train and Test Accuracy vs Epoch\n CNN One Hidden Layer, 32 filters, Size 15, ReLu Activation",
+        save_path="assignments/hw07/figures/part_c.png"
+    ),
+    dict(
+        name="part_d",
+        model = nn.Sequential(
+            nn.Conv1d(in_channels=1, out_channels=32, kernel_size=15),
+            nn.ReLU(),
+            nn.MaxPool1d(kernel_size=2, stride=2),
+            nn.Flatten(),
+            nn.LazyLinear(10)
+        ),
+        title="Train and Test Accuracy vs Epoch\n CNN One Hidden Layer, 32 filters, Size 15, ReLu Activation, Max Pool=2, Stride 2",
+        save_path="assignments/hw07/figures/part_d.png"
+    ),
+    dict(
+        name="part_e",
+        model = nn.Sequential(
+            nn.Conv1d(in_channels=1, out_channels=32, kernel_size=15),
+            nn.ReLU(),
+            nn.MaxPool1d(kernel_size=242, stride=242),
+            nn.Flatten(),
+            nn.Linear(32, 10)
+        ),
+        title="Train and Test Accuracy vs Epoch\n CNN One Hidden Layer, 32 filters, Size 15, ReLu Activation, Max Pooling",
+        save_path="assignments/hw07/figures/part_e.png"
+    ),
+    dict(
+        name="part_f",
+        model = nn.Sequential(
+            nn.Conv1d(in_channels=1, out_channels=16, kernel_size=15),
+            nn.ReLU(),
+            nn.MaxPool1d(kernel_size=2, stride=2),
+
+            nn.Conv1d(in_channels=16, out_channels=16, kernel_size=15),
+            nn.ReLU(),
+            nn.MaxPool1d(kernel_size=2, stride=2),
+
+            nn.Flatten(),
+            nn.LazyLinear(10)
+        ),
+        title="Train and Test Accuracy vs Epoch\n CNN Two Hidden Layers, 16 filters, Size 15, ReLu Activation\nMax Pooling, Size 2, Stride 2",
+        save_path="assignments/hw07/figures/part_f.png"
+    ),
+    dict(
+        name="part_g",
+        model = nn.Sequential(
+            #layer 1
+            nn.Conv1d(in_channels=1, out_channels=16, kernel_size=15),
+            nn.ReLU(),
+            nn.MaxPool1d(kernel_size=2, stride=2),
+
+            #layer 2
+            nn.Conv1d(in_channels=16, out_channels=16, kernel_size=15),
+            nn.ReLU(),
+            nn.MaxPool1d(kernel_size=2, stride=2),
+
+            #layer 3
+            nn.Conv1d(in_channels=16, out_channels=16, kernel_size=15),
+            nn.ReLU(),
+            nn.MaxPool1d(kernel_size=2, stride=2),
+
+            nn.Flatten(),
+            nn.LazyLinear(10)
+        ),
+        title="Train and Test Accuracy vs Epoch\n CNN Three Hidden Layers, 16 filters, Size 15, ReLu Activation\nMax Pooling, Size 2, Stride 2",
+        save_path="assignments/hw07/figures/part_g.png"
+    )
+]
+
+#parts c through g
+results_cnn = []
+for item in parts_c_g:
+    train_accuracy, test_accuracy = run_all_CNN(
+        model=item["model"],
+        training_data=train_load, testing_data=test_load,
+        device=device, plot_title=item["title"], image_saved_path=item["save_path"], print_option=25
+    )
+
+    #add to the results object the final train and test accuracies
+    results_cnn.append({
+        "model": item["name"],
+        "final_train_acc": train_accuracy[-1],
+        "final_test_acc": test_accuracy[-1]
+    })
