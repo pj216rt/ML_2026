@@ -686,6 +686,123 @@ plt.title("Train and Test Accuracy vs Epoch\n CNN Two Hidden Layers, 16 filters,
 plt.legend()
 plt.grid(True)
 plt.tight_layout()
+plt.savefig("assignments/hw07/figures/part_f.png", dpi=400, bbox_inches="tight")
+plt.close()
+#plt.show()
+
+#part g
+#three hideen layers, each with 16 filkters, size 15, ReLU, max pooling size, stride 2.
+model = nn.Sequential(
+    #layer 1
+    nn.Conv1d(in_channels=1, out_channels=16, kernel_size=15),
+    nn.ReLU(),
+    nn.MaxPool1d(kernel_size=2, stride=2),
+
+    #layer 2
+    nn.Conv1d(in_channels=16, out_channels=16, kernel_size=15),
+    nn.ReLU(),
+    nn.MaxPool1d(kernel_size=2, stride=2),
+
+    #layer 3
+    nn.Conv1d(in_channels=16, out_channels=16, kernel_size=15),
+    nn.ReLU(),
+    nn.MaxPool1d(kernel_size=2, stride=2),
+
+    nn.Flatten(),
+    nn.LazyLinear(10)
+).to(device)
+
+optimizer = optim.SGD(model.parameters(), momentum=0.9, lr = 0.01)
+training_values = []
+test_values = []
+
+#iterating over epochs.
+#https://codesignal.com/learn/courses/building-a-neural-network-in-pytorch/lessons/training-a-neural-network-model-with-pytorch
+#I think this dual loop works? https://discuss.pytorch.org/t/iterating-through-a-dataloader-object/25437
+for epoch in range(epochs_to_use):
+    #Training
+    #train model once per epoch
+    model.train()
+    train_correct = 0
+    train_total = 0
+
+    for x_batch, y_batch in train_load:
+
+        #send data to CUDA device.  #Need (N, C_in, L)
+        #https://docs.pytorch.org/docs/stable/generated/torch.nn.Conv1d.html
+        x_batch = x_batch.to(device)
+        y_batch = y_batch.to(device)
+
+        x_batch = x_batch.unsqueeze(1)
+
+        #set gradients to 0
+        optimizer.zero_grad()
+        
+        #forward pass
+        outputs = model(x_batch)
+
+        #compute the loss
+        loss = criterion(outputs, y_batch)
+
+        #backward pass
+        loss.backward()
+
+        #optimize the model parameters
+        optimizer.step()
+
+        #add compute train accuracy
+        #outputs =  model(x_batch)
+        soft_outputs = torch.nn.functional.softmax(outputs, dim=1)
+        top_class = soft_outputs.topk(1, dim = 1)[1].squeeze()
+
+        train_correct = train_correct + (top_class == y_batch).sum().item()
+        train_total = train_total + y_batch.size(0)
+
+    train_acc = train_correct / train_total
+
+    #Testing now
+    #predictions
+    # #https://discuss.pytorch.org/t/obtain-probabilities-from-cross-entropy-loss/157259
+    model.eval()
+    test_correct = 0
+    test_total = 0
+
+    with torch.no_grad():
+        for x_batch, y_batch in test_load:
+            x_batch = x_batch.to(device)
+
+            x_batch = x_batch.unsqueeze(1)
+            y_batch = y_batch.to(device)
+
+            #want predicted class labels
+            outputs =  model(x_batch)
+            soft_outputs = torch.nn.functional.softmax(outputs, dim=1)
+            top_class = soft_outputs.topk(1, dim = 1)[1].squeeze()
+
+            test_correct = test_correct + (top_class == y_batch).sum().item()
+            test_total = test_total + y_batch.size(0)
+
+    test_acc = test_correct / test_total
+
+    #append values to empty lists
+    training_values.append(train_acc)
+    test_values.append(test_acc)
+
+    if (epoch + 1) % 10 == 0:
+        print(f"Epoch {epoch+1:3d} | Train acc: {train_acc:.4f} | Test acc: {test_acc:.4f}") 
+
+#plotting this now
+plt.figure()
+plt.plot(range(epochs_to_use), training_values, label="Train Accuracy")
+plt.plot(range(epochs_to_use), test_values, label="Test Accuracy")
+plt.xlabel("Epoch")
+plt.ylabel("Accuracy")
+plt.title("Train and Test Accuracy vs Epoch\n CNN Three Hidden Layers, 16 filters, Size 15, ReLu Activation\nMax Pooling, Size 2, Stride 2")
+plt.legend()
+plt.grid(True)
+plt.tight_layout()
 #plt.savefig("assignments/hw07/figures/part_f.png", dpi=400, bbox_inches="tight")
 #plt.close()
 plt.show()
+
+#800 lines is a lot.  Gotta be a better way to loop this
