@@ -19,9 +19,9 @@ mat = loadmat("assignments/hw07/data/cnnslm3000.mat")
 x, xtest = (torch.from_numpy(mat[k]) for k in ("x", "xtest"))
 y, ytest = (torch.from_numpy(mat[k]).t().squeeze() for k in ("y", "ytest"))
 
-#check the data types
-print("x:", x.shape, x.dtype, "y:", y.shape, y.dtype)
-print("xtest:", xtest.shape, xtest.dtype, "ytest:", ytest.shape, ytest.dtype)
+#check the data types.  mostly for debugging. 
+#print("x:", x.shape, x.dtype, "y:", y.shape, y.dtype)
+#print("xtest:", xtest.shape, xtest.dtype, "ytest:", ytest.shape, ytest.dtype)
 
 #Use GPU
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -40,9 +40,63 @@ train_load = DataLoader(TensorDataset(x, y), batch_size=batch_size, shuffle=True
 test_load  = DataLoader(TensorDataset(xtest, ytest), batch_size=batch_size, shuffle=False)
 
 #function for reuse
+#training the data.
 def run_NN_train(model, loader, optimizer, device):
-    
+    model.train()
+    correct, total = 0, 0
 
+    #batchs
+    for x_batch, y_batch in loader:
+        x_batch = x_batch.to(device)
+        y_batch = y_batch.to(device)
+
+        #set gradients to 0, forward pass, compute the losee
+        #backward pass, then update model parameters
+        optimizer.zero_grad()
+        outputs = model(x_batch)
+        loss = criterion(outputs, y_batch)
+        loss.backward()
+        optimizer.step()
+
+        #make predictions
+        soft_outputs = torch.nn.functional.softmax(outputs, dim=1)
+        top_class = soft_outputs.topk(1, dim = 1)[1].squeeze()
+
+        correct = correct + (top_class == y_batch).sum().item()
+        total = total + y_batch.size(0)
+
+    return (correct/total)
+
+#function for testing the data.  Don't need optimizer anymore?
+def run_NN_test(model, loader, device):
+    model.eval()
+    correct, total = 0,0
+
+    #batches
+    for x_batch, y_batch in loader:
+        x_batch = x_batch.to(device)
+        y_batch = y_batch.to(device)
+
+        #want predicted class labels
+        outputs =  model(x_batch)
+        soft_outputs = torch.nn.functional.softmax(outputs, dim=1)
+        top_class = soft_outputs.topk(1, dim = 1)[1].squeeze()
+
+        correct = correct + (top_class == y_batch).sum().item()
+        total = total + y_batch.size(0)
+
+    return (correct/total)
+
+#function to train and plot
+def run_all(model, training_data, testing_data, device, epochs=100, lr=0.01,
+            momentum=0.9, print_option = 10):
+    #send model to CUDA device, setting optimizer, and criterion
+    model = model.to(device)
+    optimizer = optim.SGD(model.parameters(), lr=lr, momentum=momentum)
+    criterion = nn.CrossEntropyLoss()
+
+    train_accs, test_accs = [], []
+    print("Hello")
 
 #information for a loop
 parts_a_b = [
