@@ -11,17 +11,13 @@ import matplotlib.pyplot as plt
 #https://docs.pytorch.org/tutorials/beginner/basics/buildmodel_tutorial.html
 #https://www.codecademy.com/article/building-a-neural-network-using-pytorch
 
-
+#need to cut down the number of lines of code.  800 is insane
 #a single .mat file
 mat = loadmat("assignments/hw07/data/cnnslm3000.mat")
 
-#saving objects
-x = mat["x"]
-y = mat["y"]
-xtest = mat["xtest"]
-ytest = mat["ytest"]
-
-print(y)
+#one liners to get x and x test.  stores them as tensors from the getgo
+x, xtest = (torch.from_numpy(mat[k]) for k in ("x", "xtest"))
+y, ytest = (torch.from_numpy(mat[k]).t().squeeze() for k in ("y", "ytest"))
 
 #check the data types
 print("x:", x.shape, x.dtype, "y:", y.shape, y.dtype)
@@ -31,17 +27,6 @@ print("xtest:", xtest.shape, xtest.dtype, "ytest:", ytest.shape, ytest.dtype)
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 print("Using device:", device)
 
-#need to convert the data to tensors
-x_tensor = torch.from_numpy(x)
-xtest_tensor = torch.from_numpy(xtest)
-
-#transposing 
-y_tensor = torch.from_numpy(y).t().squeeze()
-ytest_tensor = torch.from_numpy(ytest).t().squeeze()
-
-#check if they've changed
-print("After torch convers.  y:", y_tensor.shape, y_tensor.dtype, "ytest:", ytest_tensor.shape, ytest_tensor.dtype)
-
 #initialising the loss function and the number of epochs to use
 #as well as optimizer to use
 epochs_to_use = 100
@@ -50,24 +35,40 @@ criterion = nn.CrossEntropyLoss()
 #just picking one between 32 and 256
 batch_size = 128
 
-#need to convert data into Tensors
-train_dataset = TensorDataset(x_tensor, y_tensor)
-test_dataset = TensorDataset(xtest_tensor, ytest_tensor)
+#need to get Dataloaders of the Datasets
+train_load = DataLoader(TensorDataset(x, y), batch_size=batch_size, shuffle=True)
+test_load  = DataLoader(TensorDataset(xtest, ytest), batch_size=batch_size, shuffle=False)
 
-#DataLoaders
-train_load = DataLoader(
-    train_dataset,
-    batch_size=batch_size,
-    shuffle=True
-)
+#function for reuse
+def run_NN_train(model, loader, optimizer, device):
+    
 
-test_load = DataLoader(
-    test_dataset,
-    batch_size=batch_size,
-    shuffle=False
-)
 
-print(x_tensor[0].numel())
+#information for a loop
+parts_a_b = [
+    dict(
+        name="part_a",
+        model=nn.Sequential(
+            nn.Linear(256, 256),
+            nn.ReLU(),
+            nn.Linear(256, 10)
+        ),
+        title="Train and Test Accuracy vs Epoch\nOne Hidden Layer, 256 neurons, ReLU Activation",
+        save_path="assignments/hw07/figures/part_a.png"
+    ),
+    dict(
+        name="part_b",
+        model=nn.Sequential(
+            nn.Linear(256, 64),
+            nn.ReLU(),
+            nn.Linear(64, 64),
+            nn.ReLU(),
+            nn.Linear(64, 10)
+        ),
+        title="Train and Test Accuracy vs Epoch\nTwo Hidden Layers, 64 neurons each, ReLU Activation",
+        save_path="assignments/hw07/figures/part_b.png"
+    )
+]
 
 #part a.  1 hidden layer + ReLU 256 neurons
 #defining model AND sending it to CUDA device
