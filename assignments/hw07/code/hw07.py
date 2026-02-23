@@ -11,8 +11,7 @@ import matplotlib.pyplot as plt
 #https://docs.pytorch.org/tutorials/beginner/basics/buildmodel_tutorial.html
 #https://www.codecademy.com/article/building-a-neural-network-using-pytorch
 
-#need to cut down the number of lines of code.  800 is insane
-#a single .mat file
+#need to cut down the number of lines of code.
 mat = loadmat("assignments/hw07/data/cnnslm3000.mat")
 
 #one liners to get x and x test.  stores them as tensors from the getgo
@@ -28,11 +27,8 @@ device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 print("Using device:", device)
 
 #initialising the loss function and the number of epochs to use
-#as well as optimizer to use
+#as well as optimizer to use.  just picking one between 32 and 256
 epochs_to_use = 100
-criterion = nn.CrossEntropyLoss()
-
-#just picking one between 32 and 256
 batch_size = 128
 
 #need to get Dataloaders of the Datasets
@@ -253,6 +249,7 @@ def run_all_CNN(model, training_data, testing_data, device, epochs=100, lr=0.01,
 
     return train_accs, test_accs
 
+#list of dicts for the CNN.  needed to unsqueeze data for the Conv1d filter
 parts_c_g = [
     dict(
         name="part_c",
@@ -270,6 +267,7 @@ parts_c_g = [
         model = nn.Sequential(
             nn.Conv1d(in_channels=1, out_channels=32, kernel_size=15),
             nn.ReLU(),
+            #https://docs.pytorch.org/docs/stable/generated/torch.nn.MaxPool1d.html
             nn.MaxPool1d(kernel_size=2, stride=2),
             nn.Flatten(),
             nn.LazyLinear(10)
@@ -282,6 +280,10 @@ parts_c_g = [
         model = nn.Sequential(
             nn.Conv1d(in_channels=1, out_channels=32, kernel_size=15),
             nn.ReLU(),
+            #input size 256.  Kernel size 15.  256-15=242.
+            #across entire size of map
+            #https://medium.com/@minhazc.engg/padding-and-strides-in-cnn-58dc56493887.  Stride 242
+            #
             nn.MaxPool1d(kernel_size=242, stride=242),
             nn.Flatten(),
             nn.Linear(32, 10)
@@ -292,10 +294,12 @@ parts_c_g = [
     dict(
         name="part_f",
         model = nn.Sequential(
+            #layer 1
             nn.Conv1d(in_channels=1, out_channels=16, kernel_size=15),
             nn.ReLU(),
             nn.MaxPool1d(kernel_size=2, stride=2),
 
+            #layer 2
             nn.Conv1d(in_channels=16, out_channels=16, kernel_size=15),
             nn.ReLU(),
             nn.MaxPool1d(kernel_size=2, stride=2),
@@ -352,3 +356,16 @@ for item in parts_c_g:
 #part h.  One big table
 total_results = pd.DataFrame(results + results_cnn)
 print(total_results)
+
+#need to send this table to LATEX
+LATEX_table = total_results.to_latex(
+    index=False,
+    caption=None,
+    label=None,
+    column_format="c" * total_results.shape[1],
+    escape=True
+)
+
+#save latex table
+with open("assignments/hw07/output/final_train_test_acc.tex", "w") as f:
+    f.write(LATEX_table)

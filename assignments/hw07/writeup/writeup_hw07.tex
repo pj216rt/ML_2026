@@ -49,6 +49,7 @@
 \section*{Problem 1}
 
 \begin{enumerate}[label=(1\alph*), ref=1\alph*]
+    %part a
     \item NN w/ one hidden layer, 256 neurons, ReLU activation.
     \begin{figure}[htbp] 
         \centering 
@@ -56,36 +57,66 @@
         \caption{Train and Test accuracy vs. Epoch, part a.} 
     \label{fig:part a} 
     \end{figure}
-    \item NN w/ two hidden laters, 64 neurons, ReLU activation
+    %part b
+    \item NN w/ two hidden laters, 64 neurons each, ReLU activation
     \begin{figure}[htbp] 
         \centering 
         \includegraphics[width=0.5\linewidth]{../figures/part_b.png} 
         \caption{Train and Test accuracy vs. Epoch, part b.} 
     \label{fig:part b} 
     \end{figure}
-    \item NN w/ one hidden layer, 256 neurons, ReLU activation.
+    %part c
+    \newpage
+    \item CNN w/ one hidden layer, 32 filters of size 15, ReLU activation.
     \begin{figure}[htbp] 
         \centering 
         \includegraphics[width=0.5\linewidth]{../figures/part_c.png} 
         \caption{Train and Test accuracy vs. Epoch, part c.} 
     \label{fig:part c} 
     \end{figure}
-    \item CNN w/ one hidden layer, 32 filters of size 15, ReLU activation
+    %part d
+    \item CNN w/ one hidden layer, 32 filters of size 15, ReLU activation, max pooling size 2, stride 2
     \begin{figure}[htbp] 
         \centering 
         \includegraphics[width=0.5\linewidth]{../figures/part_d.png} 
         \caption{Train and Test accuracy vs. Epoch, part d.} 
     \label{fig:part d} 
     \end{figure}
-    \item CNN w/ one hidden layer, 32 filters of size 15, ReLUE activation, max pooling size 2, stride 2.
+    %part e
+    \newpage
+    \item CNN w/ one hidden layer, 32 filters of size 15, ReLUE activation, max pooling entire output.
     \begin{figure}[htbp] 
         \centering 
         \includegraphics[width=0.5\linewidth]{../figures/part_e.png} 
         \caption{Train and Test accuracy vs. Epoch, part e.} 
     \label{fig:part e} 
     \end{figure}
+    %part f
     \item CNN w/ two hidden layers, 16 filters of size 15, ReLUE activation, max pooling size 2, stride 2.
+    \begin{figure}[htbp] 
+        \centering 
+        \includegraphics[width=0.5\linewidth]{../figures/part_f.png} 
+        \caption{Train and Test accuracy vs. Epoch, part f.} 
+    \label{fig:part f} 
+    \end{figure}
+    %part g
+    \newpage
     \item CNN w/ three hidden layers, 16 filters of size 15, ReLUE activation, max pooling size 2, stride 2.
+    \begin{figure}[htbp] 
+        \centering 
+        \includegraphics[width=0.5\linewidth]{../figures/part_g.png} 
+        \caption{Train and Test accuracy vs. Epoch, part g.} 
+    \label{fig:part g} 
+    \end{figure}
+    %part h
+    \item Table of final train and test accuracies.
+    \begin{table}[htbp]
+        \centering
+        \input{../output/final_train_test_acc.tex}
+        \caption{Final Train and Test Accuracies for all Models}
+        \label{tab:table_part_h}
+    \end{table}
+    From this, it appears as though the model in part e had the best test accuracy.  
 \end{enumerate}
 
 % \newpage
