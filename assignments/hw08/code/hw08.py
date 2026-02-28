@@ -11,15 +11,14 @@ from sklearn.mixture import GaussianMixture
 #https://scikit-learn.org/stable/modules/generated/sklearn.metrics.cluster.contingency_matrix.html
 #https://docs.scipy.org/doc/scipy/reference/generated/scipy.optimize.linear_sum_assignment.html
 def conting_matrix(observed, predicted):
-    #function to compute the contingency matrix
-    print("Contingency Matrix:")
-
     conting_matrix_results = contingency_matrix(observed, predicted)
 
     #need to maximize, so we need to minimize the negative of the contingency matrix
     row_ind, col_ind = linear_sum_assignment(-conting_matrix_results)
 
-    #then matching cluster labels with true labels
+    accuracy = conting_matrix_results[row_ind, col_ind].sum() / np.sum(conting_matrix_results)
+
+    return accuracy
 
 #function to apply the adjusted rand index to the observed and predicted labels
 #https://scikit-learn.org/stable/modules/generated/sklearn.metrics.adjusted_rand_score.html
@@ -65,6 +64,10 @@ for a in range(5):
     #EM clustering
     EM_cluster = GaussianMixture(n_components=2, n_init=10, random_state=1000+a)
     EM_cluster_labels = EM_cluster.fit_predict(X)
+
+    #computing accuracy
+    accuracy_kmeans = conting_matrix(y, kmeans_labels)
+    accuracy_EM = conting_matrix(y, EM_cluster_labels)
 
     #the adjusted rand inex
     rand_index_kmeans = applying_rand_index(y, kmeans_labels)
