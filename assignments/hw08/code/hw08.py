@@ -62,13 +62,15 @@ acc_em_list  = []
 rand_kmeans_list = []
 rand_em_list = []
 
+a_list = []
+
 #loop over the different a values
 for a in range(5):
     for run in range(10):
         #get dataset
         X, y = make_dataset_part_a(a=a)
 
-        #K-means clustering.  Adding a random seed this time.
+        #K-means clustering.  Adding a random seed this time. for each run and each dataset
         kmeans = KMeans(n_clusters=2, n_init=10, random_state=1000+a+run)
         kmeans_labels = kmeans.fit_predict(X)
 
@@ -88,39 +90,76 @@ for a in range(5):
         rand_index_kmeans = applying_rand_index(y, kmeans_labels)
         rand_index_EM = applying_rand_index(y, EM_cluster_labels)
 
-    #plot the clustering results if a==0
+        #append the rand_index to the list
+        rand_kmeans_list.append(rand_index_kmeans)
+        rand_em_list.append(rand_index_EM)
+
+        a_list.append(a)
+
+    #plot the clustering results if a==0 and some random run number.  9 here.
     #https://matplotlib.org/stable/gallery/subplots_axes_and_figures/subplots_demo.html
     if a == 0 and run == 9:
         #set up figure
         fig, axes = plt.subplots(1, 2)
 
         #K-means plot
-        axes[0].scatter(
-            X[:, 0], X[:, 1],
+        axes[0].scatter(X[:, 0], X[:, 1],
             c=kmeans_labels,
-            s=10,
-            alpha=0.7
+            s=10,alpha=0.7
             )
         axes[0].set_title("K-means Clustering (a = 0)")
         axes[0].set_xlabel("X1")
         axes[0].set_ylabel("X2")
 
         #EM plot
-        axes[1].scatter(
-            X[:, 0], X[:, 1],
+        axes[1].scatter(X[:, 0], X[:, 1],
             c=EM_cluster_labels,
-            s=10,
-            alpha=0.7
+            s=10, alpha=0.7
             )
         axes[1].set_title("EM Clustering (a = 0)")
         axes[1].set_xlabel("X1")
         axes[1].set_ylabel("X2")
 
         plt.tight_layout()
-        plt.show()
+        plt.savefig("assignments/hw08/figures/cluster_results_a.png", dpi=400, bbox_inches="tight")
+        plt.close()
+        #plt.show()
+
+#little hard to see, maybe add a jitter?
+#plot the accuracy of each run vs as a seperate dots on the same plot
+#different colors for K-means and EM
+plt.figure()
+plt.scatter(a_list, np.array(acc_kmeans_list), label = "K-means")
+plt.scatter(a_list, np.array(acc_em_list), label = "EM")
+plt.xlabel("Dataset a")
+plt.ylabel("Accuracy")
+plt.title("Accuracy across 5 datasets, 10 runs each")
+plt.legend()
+plt.grid(alpha=0.3)
+plt.tight_layout()
+plt.savefig("assignments/hw08/figures/accuracy_vs_a.png", dpi=400, bbox_inches="tight")
+plt.close()
+#plt.show()
+
+#plotting the adjusted rand index now.  Same as above but with the rand index instead of accuracy
+plt.figure()
+plt.scatter(a_list, np.array(rand_kmeans_list), label = "K-means")
+plt.scatter(a_list, np.array(rand_em_list), label = "EM")
+plt.xlabel("Dataset a")
+plt.ylabel("Adjusted Rand Index")
+plt.title("Adjusted Rand Index across 5 datasets, 10 runs each")
+plt.legend()
+plt.grid(alpha=0.3)
+plt.tight_layout()
+plt.savefig("assignments/hw08/figures/ari_vs_a.png", dpi=400, bbox_inches="tight")
+plt.close()
+#plt.show()
+
+#part b
+for i in range(10):
+    #each element is from a standard normal distibubtion
+    #https://numpy.org/doc/2.1/reference/random/generated/numpy.random.normal.html
+    M = np.random.normal(0, 1, size=(2, 2))
     
-    #plot the accuracy of each run vs as a seperate dots on the same plot
-    #different colors for K-means and EM
-    # plt.figure()
-    # plt.scatter(
-    # )
+    #SVD decomposition
+    U, S, Vt = np.linalg.svd(M)
