@@ -368,3 +368,5 @@ LATEX_table = total_results.to_latex(
 #save latex table
 with open("assignments/hw07/output/final_train_test_acc.tex", "w") as f:
     f.write(LATEX_table)
+
+#probably could've fit this all into one big loop, but oh well.
