@@ -14,10 +14,12 @@ from sklearn.mixture import GaussianMixture
 def conting_matrix(observed, predicted):
     conting_matrix_results = contingency_matrix(observed, predicted)
 
-    #need to maximize, so we need to minimize the negative of the contingency matrix
+    #need to maximize, so we need to minimize the negative of the contingency matrix.
+    #returns the rolw and column indices for the optimal assignment.
     row_ind, col_ind = linear_sum_assignment(-conting_matrix_results)
 
-    accuracy = conting_matrix_results[row_ind, col_ind].sum() / np.sum(conting_matrix_results)
+    #maximum diag sum/total number of samples
+    accuracy = conting_matrix_results[row_ind, col_ind].sum()/np.sum(conting_matrix_results)
 
     return accuracy
 
@@ -155,6 +157,12 @@ plt.savefig("assignments/hw08/figures/ari_vs_a.png", dpi=400, bbox_inches="tight
 plt.close()
 #plt.show()
 
+#need function for KL divergence between two Gaussians
+def kl_divergence_gaussians(mu1, cov1, mu2, cov2):
+    #get dimension
+    d = mu1.shape[0]
+
+
 #part b
 for i in range(10):
     #each element is from a standard normal distibubtion
@@ -162,4 +170,22 @@ for i in range(10):
     M = np.random.normal(0, 1, size=(2, 2))
     
     #SVD decomposition
-    U, S, Vt = np.linalg.svd(M)
+    U, S, Vh = np.linalg.svd(M)
+
+    #create Sigma matrix from U
+    D = np.diag([25,1])
+    Sigma = U @ D @ U.T
+
+    #generate X centered at 0 with covariance Sigma
+    XQ = multivariate_normal.rvs(
+        mean=[0.0, 0.0],
+        cov=Sigma,
+        size=500
+    )
+
+    #generate XP from (10,0) with covariance Sigma
+    XP = multivariate_normal.rvs(
+        mean=[10.0, 0.0],
+        cov=Sigma,
+        size=500
+    )
