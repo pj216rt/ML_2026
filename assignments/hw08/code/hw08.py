@@ -73,11 +73,11 @@ for a in range(5):
         X, y = make_dataset_part_a(a=a)
 
         #K-means clustering.  Adding a random seed this time. for each run and each dataset
-        kmeans = KMeans(n_clusters=2, n_init=10, random_state=1000+a+run)
+        kmeans = KMeans(n_clusters=2, n_init=1, random_state=1000+a+run)
         kmeans_labels = kmeans.fit_predict(X)
 
         #EM clustering
-        EM_cluster = GaussianMixture(n_components=2, n_init=10, random_state=1000+a+run)
+        EM_cluster = GaussianMixture(n_components=2, n_init=1, random_state=1000+a+run)
         EM_cluster_labels = EM_cluster.fit_predict(X)
 
         #computing accuracy
@@ -158,12 +158,33 @@ plt.close()
 #plt.show()
 
 #need function for KL divergence between two Gaussians
+#I think there may be an extra 2 in the KL formula provided
+#https://mr-easy.github.io/2020-04-16-kl-divergence-between-2-gaussian-distributions/
 def kl_divergence_gaussians(mu1, cov1, mu2, cov2):
     #get dimension
     d = mu1.shape[0]
 
+    #need the log determinant of the covariance matrices
+    #https://numpy.org/doc/2.1/reference/generated/numpy.linalg.slogdet.html
+    sign1, logdet1 = np.linalg.slogdet(cov1)
+    sign2, logdet2 = np.linalg.slogdet(cov2)
+
+    #trace term
+    t_term = np.trace(np.linalg.inv(cov2) @ cov1)
+
+    #quadtratid term
+    q_term = (mu2 - mu1).T @ np.linalg.inv(cov2) @ (mu2 - mu1)
+
+    #two 1/2 terms.  make sure I have everything
+    kl_div = 0.5 * ((logdet2 - logdet1 - d) + t_term + q_term)
+
+    return kl_div
+
+#do we also need a function for the k-means with full covariance matrices?
 
 #part b
+results = []
+
 for i in range(10):
     #each element is from a standard normal distibubtion
     #https://numpy.org/doc/2.1/reference/random/generated/numpy.random.normal.html
@@ -189,3 +210,27 @@ for i in range(10):
         cov=Sigma,
         size=500
     )
+
+    X = np.vstack([XQ, XP])
+
+    #compute the KL divergence between the two distributions
+    kl = kl_divergence_gaussians(mu1=np.array([0.0, 0.0]), cov1=Sigma, mu2=np.array([10.0, 0.0]), cov2=Sigma)
+
+    #K means with no covariance modelling
+    kmeans = KMeans(n_clusters=2, n_init=10, random_state=1000+i)
+    kmeans_labels = kmeans.fit_predict(X)
+
+    #K means with full covariance matrices
+
+
+
+    #EM clustering
+    EM_cluster = GaussianMixture(n_components=2, n_init=10, random_state=1000+i)
+    EM_cluster_labels = EM_cluster.fit_predict(X)
+
+    #add stuff to results list
+    # results.append({
+    #     "kl_divergence": kl,
+    #     "kmeans_labels": kmeans_labels,
+    #     "em_labels": EM_cluster_labels
+    # })
