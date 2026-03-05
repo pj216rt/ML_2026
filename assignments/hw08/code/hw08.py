@@ -197,12 +197,13 @@ for i in range(10):
     D = np.diag([25,1])
     Sigma = U @ D @ U.T
 
-    #generate X centered at 0 with covariance Sigma
+    #generate X centered at 0 with covariance Sigma plus labels
     XQ = multivariate_normal.rvs(
         mean=[0.0, 0.0],
         cov=Sigma,
         size=500
     )
+    YQ = np.zeros(500)
 
     #generate XP from (10,0) with covariance Sigma
     XP = multivariate_normal.rvs(
@@ -210,23 +211,31 @@ for i in range(10):
         cov=Sigma,
         size=500
     )
+    YP = np.ones(500)
 
     X = np.vstack([XQ, XP])
+    y = np.concatenate([YQ, YP])
 
     #compute the KL divergence between the two distributions
-    kl = kl_divergence_gaussians(mu1=np.array([0.0, 0.0]), cov1=Sigma, mu2=np.array([10.0, 0.0]), cov2=Sigma)
+    kl = kl_divergence_gaussians(
+        mu1=np.array([10.0,0.0]),
+        cov1=Sigma,
+        mu2=np.array([0.0,0.0]),
+        cov2=Sigma
+        )
+    
 
     #K means with no covariance modelling
-    kmeans = KMeans(n_clusters=2, n_init=10, random_state=1000+i)
-    kmeans_labels = kmeans.fit_predict(X)
+    # kmeans = KMeans(n_clusters=2, n_init=1, random_state=1000+i)
+    # kmeans_labels = kmeans.fit_predict(X)
 
-    #K means with full covariance matrices
+    # #K means with full covariance matrices
+    # k_mean_full_cov = GaussianMixture(n_components=2, covariance_type="full", n_init=1, random_state=1000+i)
+    # k_mean_full_cov_labels = k_mean_full_cov.fit_predict(X)
 
-
-
-    #EM clustering
-    EM_cluster = GaussianMixture(n_components=2, n_init=10, random_state=1000+i)
-    EM_cluster_labels = EM_cluster.fit_predict(X)
+    # #EM clustering
+    # EM_cluster = GaussianMixture(n_components=2, n_init=1, random_state=1000+i)
+    # EM_cluster_labels = EM_cluster.fit_predict(X)
 
     #add stuff to results list
     # results.append({
@@ -234,3 +243,40 @@ for i in range(10):
     #     "kmeans_labels": kmeans_labels,
     #     "em_labels": EM_cluster_labels
     # })
+
+#function to impliment k-means clustering from the slides
+#k-means with either no covariance modelling or full covariance modelling
+def k_means_clustering(X, n_clusters, max_iters=100, tol=1e-6, seed=123,
+                       covariance="identity"):
+
+    np.random.seed(seed)
+    n, d = X.shape
+
+    #random initialization of cluster centers and covariance matrices
+    idx = np.random.choice(n, n_clusters, replace=False)
+    centers = X[idx]
+
+    #creates K*d*d array of identity matrices.  labels are initialized to -1 for all samples, meaning 
+    #they are not assigned to any cluster.
+    Sigmas = np.tile(np.eye(d), (K, 1, 1))
+    labels = -np.ones(n, dtype=int)
+
+    for i in range(max_iters):
+        #need a way to track distance from point i to cluster k
+        dists = np.zeros((n, n_clusters))
+
+        #different cases for the covariance
+        if covariance == "identity":
+            for k in range(n_clusters):
+                dists[:, k] = np.linalg.norm(X - centers[k], axis=1)**2
+        elif covariance == "full":
+            for k in range(n_clusters):
+                diff = X - centers[k]
+                dists[:, k] = np.sum(diff @ np.linalg.inv(Sigmas[k]) * diff, axis=1)
+        else:
+            raise ValueError("Invalid covariance type.")
+    
+    #https://numpy.org/devdocs/reference/generated/numpy.argmin.html
+    labels = np.argmin(dists, axis=1)
+
+    #do something if the labels haven't changed.
