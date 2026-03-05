@@ -157,6 +157,76 @@ plt.savefig("assignments/hw08/figures/ari_vs_a.png", dpi=400, bbox_inches="tight
 plt.close()
 #plt.show()
 
+#function to impliment k-means clustering from the slides
+#k-means with either no covariance modelling or full covariance modelling
+def k_means_clustering(X, n_clusters, max_iters=100, tol=1e-6, seed=123,
+                       covariance="identity"):
+    
+    #set random seed and get dimensions
+    np.random.seed(seed)
+    n, d = X.shape
+
+    #get initial centers by randomly sampling from the data points without replacement
+    #https://numpy.org/doc/stable/reference/random/generated/numpy.random.choice.html
+    idx = np.random.choice(n, n_clusters, replace=False)
+    centers = X[idx]
+
+    #initialize covariance matrices and labels.  Set labels to -1 so they are not initialized to any cluster
+    Sigmas = np.tile(np.eye(d), (n_clusters, 1, 1))
+    labels = -np.ones(n, dtype=int)
+
+    for i in range(max_iters):
+
+        old_labels = labels.copy()
+
+        #compute distances
+        dists = np.zeros((n, n_clusters))
+
+        #if branch for covariance type.  
+        if covariance == "identity":
+            for k in range(n_clusters):
+                dists[:, k] = np.linalg.norm(X - centers[k], axis=1)**2
+
+        elif covariance == "full":
+            for k in range(n_clusters):
+                diff = X - centers[k]
+                invS = np.linalg.inv(Sigmas[k])
+                dists[:, k] = np.sum(diff @ invS * diff, axis=1)
+
+        else:
+            raise ValueError("Invalid covariance type.")
+
+        #assign clusters
+        #https://numpy.org/devdocs/reference/generated/numpy.argmin.html
+        labels = np.argmin(dists, axis=1)
+
+        #stop if labels don't change, even if we haven't hit max_iters
+        if np.array_equal(labels, old_labels):
+            break
+
+        #update centers and covariances for each group
+        for k in range(n_clusters):
+
+            cluster_points = X[labels == k]
+
+            if len(cluster_points) == 0:
+                continue
+
+            centers[k] = cluster_points.mean(axis=0)
+
+            #compute the covariance matrix for the cluster if we are using full covariance
+            if covariance == "full":
+                if len(cluster_points) > 1:
+                    Sigmas[k] = np.cov(cluster_points, rowvar=False)
+                else:
+                    Sigmas[k] = np.eye(d)
+
+            #otherwise, just use an identity matrix
+            else:
+                Sigmas[k] = np.eye(d)
+
+    return labels, centers, Sigmas
+
 #need function for KL divergence between two Gaussians
 #I think there may be an extra 2 in the KL formula provided
 #https://mr-easy.github.io/2020-04-16-kl-divergence-between-2-gaussian-distributions/
@@ -180,10 +250,9 @@ def kl_divergence_gaussians(mu1, cov1, mu2, cov2):
 
     return kl_div
 
-#do we also need a function for the k-means with full covariance matrices?
-
 #part b
 results = []
+plot_runs = []
 
 for i in range(10):
     #each element is from a standard normal distibubtion
@@ -213,6 +282,7 @@ for i in range(10):
     )
     YP = np.ones(500)
 
+    #stack everything together
     X = np.vstack([XQ, XP])
     y = np.concatenate([YQ, YP])
 
@@ -223,60 +293,90 @@ for i in range(10):
         mu2=np.array([0.0,0.0]),
         cov2=Sigma
         )
-    
 
-    #K means with no covariance modelling
-    # kmeans = KMeans(n_clusters=2, n_init=1, random_state=1000+i)
-    # kmeans_labels = kmeans.fit_predict(X)
+    #K means with no covariance modelling (Identity)
+    k_mean_identity_labels, centers_identity, Sigmas_identity = k_means_clustering(X, n_clusters=2, covariance="identity", seed=1000+i)
 
-    # #K means with full covariance matrices
-    # k_mean_full_cov = GaussianMixture(n_components=2, covariance_type="full", n_init=1, random_state=1000+i)
-    # k_mean_full_cov_labels = k_mean_full_cov.fit_predict(X)
+    #K means with full covariance matrices
+    k_means_full_labels, centers_full, Sigmas_full = k_means_clustering(X, n_clusters=2, covariance="full", seed=1000+i)
 
-    # #EM clustering
-    # EM_cluster = GaussianMixture(n_components=2, n_init=1, random_state=1000+i)
-    # EM_cluster_labels = EM_cluster.fit_predict(X)
+    #EM clustering.  Gaussian Mixture impliements EM algorithm.  
+    #https://scikit-learn.org/stable/modules/mixture.html#gmm
+    EM_cluster = GaussianMixture(n_components=2, n_init=1, random_state=1000+i)
+    EM_cluster_labels = EM_cluster.fit_predict(X)
 
-    #add stuff to results list
-    # results.append({
-    #     "kl_divergence": kl,
-    #     "kmeans_labels": kmeans_labels,
-    #     "em_labels": EM_cluster_labels
-    # })
+    #store what we need to plot the three clustering methods for the first four runs
+    if i < 4:
+        plot_runs.append({
+            "run": i,
+            "X": X,
+            "y_true": y,
+            "pred_id": k_mean_identity_labels,
+            "pred_full": k_means_full_labels,
+            "pred_em": EM_cluster_labels,
+        })
 
-#function to impliment k-means clustering from the slides
-#k-means with either no covariance modelling or full covariance modelling
-def k_means_clustering(X, n_clusters, max_iters=100, tol=1e-6, seed=123,
-                       covariance="identity"):
+    #adding everything to the results list
+    results.append({
+        "run": i,
+        "KL_divergence": kl,
+        "accuracy_kmeans_id": conting_matrix(y, k_mean_identity_labels),
+        "ARI_kmeans_id": adjusted_rand_score(y, k_mean_identity_labels),
+        "accuracy_kmeans_full": conting_matrix(y, k_means_full_labels),
+        "ARI_kmeans_full": adjusted_rand_score(y, k_means_full_labels),
+        "accuracy_EM": conting_matrix(y, EM_cluster_labels),
+        "ARI_EM": adjusted_rand_score(y, EM_cluster_labels),
+    })
 
-    np.random.seed(seed)
-    n, d = X.shape
+#plotting the clustering results for the first four runs.  
 
-    #random initialization of cluster centers and covariance matrices
-    idx = np.random.choice(n, n_clusters, replace=False)
-    centers = X[idx]
+#plotting the accuracy bs KL divergence for the three methods across all 10 runs.
+results_df = pd.DataFrame(results)
 
-    #creates K*d*d array of identity matrices.  labels are initialized to -1 for all samples, meaning 
-    #they are not assigned to any cluster.
-    Sigmas = np.tile(np.eye(d), (K, 1, 1))
-    labels = -np.ones(n, dtype=int)
+#add some jitter to see things better
+jitter = 0.02
 
-    for i in range(max_iters):
-        #need a way to track distance from point i to cluster k
-        dists = np.zeros((n, n_clusters))
+KL_id   = results_df["KL_divergence"] + np.random.normal(0, jitter, size=len(results_df))
+KL_full = results_df["KL_divergence"] + np.random.normal(0, jitter, size=len(results_df))
+KL_em   = results_df["KL_divergence"] + np.random.normal(0, jitter, size=len(results_df))
 
-        #different cases for the covariance
-        if covariance == "identity":
-            for k in range(n_clusters):
-                dists[:, k] = np.linalg.norm(X - centers[k], axis=1)**2
-        elif covariance == "full":
-            for k in range(n_clusters):
-                diff = X - centers[k]
-                dists[:, k] = np.sum(diff @ np.linalg.inv(Sigmas[k]) * diff, axis=1)
-        else:
-            raise ValueError("Invalid covariance type.")
-    
-    #https://numpy.org/devdocs/reference/generated/numpy.argmin.html
-    labels = np.argmin(dists, axis=1)
+plt.figure()
+plt.scatter(KL_id, results_df["accuracy_kmeans_id"], label="K-means Identity")
+plt.scatter(KL_full, results_df["accuracy_kmeans_full"], label="K-means Full")
+plt.scatter(KL_em, results_df["accuracy_EM"], label="EM")
+plt.xlabel("KL Divergence")
+plt.ylabel("Accuracy")
+plt.title("Accuracy vs KL Divergence for 3 Clustering Methods\nSmall Jitter Added for Visualization")
+plt.legend()
+plt.grid(alpha=0.3)
+plt.tight_layout()
+plt.savefig("assignments/hw08/figures/KL_vs_Accuracy.png", dpi=400, bbox_inches="tight")
+plt.close()
+#plt.show()
 
-    #do something if the labels haven't changed.
+#reporting the table and reordering the columns
+df = results_df[
+[
+"run",
+"KL_divergence",
+"accuracy_kmeans_id",
+"ARI_kmeans_id",
+"accuracy_kmeans_full",
+"ARI_kmeans_full",
+"accuracy_EM",
+"ARI_EM"
+]
+].round(4)
+
+#need to send this table to LATEX
+LATEX_table = df.to_latex(
+    index=False,
+    caption=None,
+    label=None,
+    column_format="c" * df.shape[1],
+    escape=True
+)
+
+#save latex table
+with open("assignments/hw08/output/final_table.tex", "w") as f:
+    f.write(LATEX_table)
