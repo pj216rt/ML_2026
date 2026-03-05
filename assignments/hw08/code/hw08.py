@@ -260,9 +260,11 @@ for i in range(10):
     M = np.random.normal(0, 1, size=(2, 2))
     
     #SVD decomposition
+    #U rotates the data
     U, S, Vh = np.linalg.svd(M)
 
     #create Sigma matrix from U
+    #each run produces a rotated matrix with different variances along the two dimensions
     D = np.diag([25,1])
     Sigma = U @ D @ U.T
 
@@ -328,14 +330,15 @@ for i in range(10):
         "ARI_EM": adjusted_rand_score(y, EM_cluster_labels),
     })
 
-#plotting the clustering results for the first four runs.  
+#plotting the clustering results for the first four runs.
+for i in plot_runs:
+    break
 
 #plotting the accuracy bs KL divergence for the three methods across all 10 runs.
 results_df = pd.DataFrame(results)
 
 #add some jitter to see things better
 jitter = 0.02
-
 KL_id   = results_df["KL_divergence"] + np.random.normal(0, jitter, size=len(results_df))
 KL_full = results_df["KL_divergence"] + np.random.normal(0, jitter, size=len(results_df))
 KL_em   = results_df["KL_divergence"] + np.random.normal(0, jitter, size=len(results_df))
@@ -354,9 +357,22 @@ plt.savefig("assignments/hw08/figures/KL_vs_Accuracy.png", dpi=400, bbox_inches=
 plt.close()
 #plt.show()
 
+#plotting the Adjusted Rand Index vs KL divergence for the three methods across all 10 runs
+plt.figure()
+plt.scatter(KL_id, results_df["ARI_kmeans_id"], label="K-means Identity")
+plt.scatter(KL_full, results_df["ARI_kmeans_full"], label="K-means Full")
+plt.scatter(KL_em, results_df["ARI_EM"], label="EM")
+plt.xlabel("KL Divergence")
+plt.ylabel("Adjusted Rand Index")
+plt.title("Adjusted Rand Index vs KL Divergence for 3 Clustering Methods\nSmall Jitter Added for Visualization")
+plt.legend()
+plt.grid(alpha=0.3)
+plt.tight_layout()
+plt.savefig("assignments/hw08/figures/KL_vs_ARI.png", dpi=400, bbox_inches="tight")
+plt.close()
+
 #reporting the table and reordering the columns
-df = results_df[
-[
+df = results_df[[
 "run",
 "KL_divergence",
 "accuracy_kmeans_id",
@@ -365,8 +381,7 @@ df = results_df[
 "ARI_kmeans_full",
 "accuracy_EM",
 "ARI_EM"
-]
-].round(4)
+]].round(3)
 
 #need to send this table to LATEX
 LATEX_table = df.to_latex(
