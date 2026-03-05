@@ -103,8 +103,6 @@ for a in range(5):
 
     #plot the clustering results if a==0 and some random run number.  9 here.
     #https://matplotlib.org/stable/gallery/subplots_axes_and_figures/subplots_demo.html
-
-    print(random_run)
     if a == 0 and run == random_run:
         #set up figure
         fig, axes = plt.subplots(1, 2, figsize=(12,5))
@@ -336,11 +334,34 @@ for i in range(10):
     })
 
 #plotting the clustering results for the first four runs.
-for i in plot_runs:
-    run = i["run"]
-    X = i["X"]
+for item in plot_runs:
 
-    #need to set up subplots for the three methods
+    run = item["run"]
+    X = item["X"]
+
+    #share the same axes for all 3 methods
+    fig, axes = plt.subplots(1, 3, figsize=(15,5), sharex=True, sharey=True)
+
+    #list out the titles, and labels for the three methods
+    titles = ["K-means (Identity)", "K-means (Full)", "EM"]
+    label_sets = [item["pred_id"], item["pred_full"], item["pred_em"]]
+
+    #found this zip function.  Pretty nice.  Iterates through axes, labels, and titles.
+    #https://www.codecademy.com/article/python-zip-function
+    for ax, labels, title in zip(axes, label_sets, titles):
+
+        for k in np.unique(labels):
+            ax.scatter(X[labels==k,0], X[labels==k,1], s=10, alpha=0.7, label=f"Cluster {k}")
+
+        ax.set_title(f"{title}\nRun {run}")
+        ax.set_xlabel("X1")
+        ax.set_ylabel("X2")
+        ax.legend(fontsize=8)
+
+    plt.tight_layout()
+    plt.savefig(f"assignments/hw08/figures/partb_run{run}_clusters.png", dpi=400, bbox_inches="tight")
+    plt.close()
+
 
 #plotting the accuracy bs KL divergence for the three methods across all 10 runs.
 results_df = pd.DataFrame(results)

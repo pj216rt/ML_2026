@@ -56,25 +56,40 @@
 
 \begin{figure}[htbp]
     \centering 
-    \includegraphics[width=0.6\linewidth]{../figures/accuracy_vs_a.png} 
+    \includegraphics[width=0.7\linewidth]{../figures/accuracy_vs_a.png} 
     \caption{Accuracy for each run vs. dataset parameter a}
 \end{figure}
 
-\begin{figure}
+\begin{figure}[htbp]
     \centering 
-    \includegraphics[width=0.5\linewidth]{../figures/ari_vs_a.png} 
+    \includegraphics[width=0.7\linewidth]{../figures/ari_vs_a.png} 
     \caption{Adjusted Rank Index for each run vs. dataset parameter a}
 \end{figure}
 
+\newpage
 \section*{Part b}
+%stacked plots of the first four runs
+\begin{figure}[htbp]
+\centering
 
-\begin{figure}
+\includegraphics[width=0.9\textwidth]{../figures/partb_run0_clusters.png}
+\vspace{0.5cm}
+\includegraphics[width=0.9\textwidth]{../figures/partb_run1_clusters.png}
+\vspace{0.5cm}
+\includegraphics[width=0.9\textwidth]{../figures/partb_run2_clusters.png}
+\vspace{0.5cm}
+\includegraphics[width=0.9\textwidth]{../figures/partb_run3_clusters.png}
+
+\caption{Clustering results for the first four runs.}
+\end{figure}
+
+\begin{figure}[htbp]
     \centering 
     \includegraphics[width=0.5\linewidth]{../figures/KL_vs_Accuracy.png} 
     \caption{Accuracy vs. KL Divergence for the 3 methods on the 10 runs.  Small jitter added to x values for visualization.}
 \end{figure}
 
-\begin{figure}
+\begin{figure}[htbp]
     \centering 
     \includegraphics[width=0.5\linewidth]{../figures/KL_vs_ARI.png} 
     \caption{Adjusted Rand Index vs. KL Divergence for the 3 methods on the 10 runs.  Small jitter added to x values for visualization.}
