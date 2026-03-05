@@ -66,7 +66,10 @@ rand_em_list = []
 
 a_list = []
 
+random_run = np.random.randint(0, 10)
+
 #loop over the different a values
+#just using the default K-means implementation from sklearn
 for a in range(5):
     for run in range(10):
         #get dataset
@@ -100,16 +103,18 @@ for a in range(5):
 
     #plot the clustering results if a==0 and some random run number.  9 here.
     #https://matplotlib.org/stable/gallery/subplots_axes_and_figures/subplots_demo.html
-    if a == 0 and run == 9:
+
+    print(random_run)
+    if a == 0 and run == random_run:
         #set up figure
-        fig, axes = plt.subplots(1, 2)
+        fig, axes = plt.subplots(1, 2, figsize=(12,5))
 
         #K-means plot
         axes[0].scatter(X[:, 0], X[:, 1],
             c=kmeans_labels,
             s=10,alpha=0.7
             )
-        axes[0].set_title("K-means Clustering (a = 0)")
+        axes[0].set_title(f"K-means Clustering (a = 0, run = {run})")
         axes[0].set_xlabel("X1")
         axes[0].set_ylabel("X2")
 
@@ -118,7 +123,7 @@ for a in range(5):
             c=EM_cluster_labels,
             s=10, alpha=0.7
             )
-        axes[1].set_title("EM Clustering (a = 0)")
+        axes[1].set_title(f"EM Clustering (a = 0, run = {run})")
         axes[1].set_xlabel("X1")
         axes[1].set_ylabel("X2")
 
@@ -157,9 +162,9 @@ plt.savefig("assignments/hw08/figures/ari_vs_a.png", dpi=400, bbox_inches="tight
 plt.close()
 #plt.show()
 
-#function to impliment k-means clustering from the slides
+#function to impliment k-means clustering from the slides, which cares about the covariance structure
 #k-means with either no covariance modelling or full covariance modelling
-def k_means_clustering(X, n_clusters, max_iters=100, tol=1e-6, seed=123,
+def k_means_clustering(X, n_clusters, max_iters=100, seed=123,
                        covariance="identity"):
     
     #set random seed and get dimensions
@@ -193,9 +198,6 @@ def k_means_clustering(X, n_clusters, max_iters=100, tol=1e-6, seed=123,
                 invS = np.linalg.inv(Sigmas[k])
                 dists[:, k] = np.sum(diff @ invS * diff, axis=1)
 
-        else:
-            raise ValueError("Invalid covariance type.")
-
         #assign clusters
         #https://numpy.org/devdocs/reference/generated/numpy.argmin.html
         labels = np.argmin(dists, axis=1)
@@ -207,11 +209,14 @@ def k_means_clustering(X, n_clusters, max_iters=100, tol=1e-6, seed=123,
         #update centers and covariances for each group
         for k in range(n_clusters):
 
+            #select the points in the current cluster
             cluster_points = X[labels == k]
 
+            #if a cluster has no points, we can skip it
             if len(cluster_points) == 0:
                 continue
 
+            #compute the new mean/centroid
             centers[k] = cluster_points.mean(axis=0)
 
             #compute the covariance matrix for the cluster if we are using full covariance
@@ -332,7 +337,10 @@ for i in range(10):
 
 #plotting the clustering results for the first four runs.
 for i in plot_runs:
-    break
+    run = i["run"]
+    X = i["X"]
+
+    #need to set up subplots for the three methods
 
 #plotting the accuracy bs KL divergence for the three methods across all 10 runs.
 results_df = pd.DataFrame(results)
@@ -383,13 +391,26 @@ df = results_df[[
 "ARI_EM"
 ]].round(3)
 
+#rename the columns
+df.columns = [
+    "Run",
+    "KL",
+    "Acc KM (Id)",
+    "ARI KM (Id)",
+    "Acc KM (Full)",
+    "ARI KM (Full)",
+    "Acc EM",
+    "ARI EM"
+]
+
 #need to send this table to LATEX
 LATEX_table = df.to_latex(
     index=False,
     caption=None,
     label=None,
     column_format="c" * df.shape[1],
-    escape=True
+    escape=True,
+    float_format="%.3f"
 )
 
 #save latex table
