@@ -232,20 +232,12 @@ def k_means_clustering(X, n_clusters, max_iters=100, seed=123,
             #select the points in the current cluster
             cluster_points = X[labels == k]
 
-            #if a cluster has no points, we can skip it
-            # if len(cluster_points) == 0:
-            #     continue
-
             #compute the new mean/centroid
             centers[k] = cluster_points.mean(axis=0)
 
             #compute the covariance matrix for the cluster if we are using full covariance
             if covariance == "full":
                 Sigmas[k] = np.cov(cluster_points, rowvar=False)
-                # if len(cluster_points) > 1:
-                    
-                # else:
-                #     Sigmas[k] = np.eye(d)
 
             #otherwise, just use an identity matrix
             else:
