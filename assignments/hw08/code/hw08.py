@@ -362,9 +362,9 @@ results_df = pd.DataFrame(results)
 
 #add some jitter to see things better
 jitter = 0.05
-KL_id   = results_df["KL_divergence"] + np.random.normal(0, jitter, size=len(results_df))
+KL_id = results_df["KL_divergence"] + np.random.normal(0, jitter, size=len(results_df))
 KL_full = results_df["KL_divergence"] + np.random.normal(0, jitter, size=len(results_df))
-KL_em   = results_df["KL_divergence"] + np.random.normal(0, jitter, size=len(results_df))
+KL_em = results_df["KL_divergence"] + np.random.normal(0, jitter, size=len(results_df))
 
 plt.figure()
 plt.scatter(KL_id, results_df["accuracy_kmeans_id"], label="K-means Identity")
