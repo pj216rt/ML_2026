@@ -158,12 +158,12 @@ def Viterbi(states, init, trans, emit, obs):
     return path
 
 path = Viterbi(states=states, init=pi, trans=trans, emit=emit, obs=df_q2.iloc[0].to_numpy())
-print(path)
 
 #need to do something with this.  Find a beter way to report
 
 #implement the forward algorithm for the same sequence of dice rolls.
 #need to renormalize the alpha values at each step to prevent underflow.
+#for forward pass, store scaling factor at each time step
 def forward_algorithm(states, init, trans, emit, obs):
     #length of the rice rolls
     T = len(obs)
@@ -206,19 +206,57 @@ def forward_algorithm(states, init, trans, emit, obs):
     #state 1 is column 0, state 2 is column 1.  So we want alpha[118,0] / alpha[118,1]
     ratio = alpha[118,0] / alpha[118,1]
 
-    return ratio
+    #ratio, alpha, and u.  u is needed for backward algo
+    return ratio, u
 
 #function to implement the backward algorithm for the same sequence of dice rolls.
-def backward_algorithm(states, init, trans, emit, obs):
+#using the algorithm from pg 23 of the slide
+def backward_algorithm(states, trans, emit, obs, u):
     #number of observations
     T = len(obs)
 
     #number of hidden states
     S = len(states)
 
+    #store the backward probabilities.  beta[t,s] is the backward probability \beta_t^s.
+    beta = np.zeros((T, S))
+
+    #initialize beta.  \beta_T^k = 1 for all k.
+    beta[T-1] = np.ones(S)
+
+    for t in range(T-2, -1, -1):
+        for s in states:
+            sum_beta = 0
+
+            #sum over all possible next states r.
+            for r in states:
+                sum_beta += trans[s-1][r-1] * emit[r][obs[t+1]] * beta[t+1][r-1]
+
+            beta[t][s-1] = sum_beta/u[t+1]
+    
+    #asked to report the ratio of the alpha values at time 118.
+    #time 118 -> row 118
+    #state 1 is column 0, state 2 is column 1.  So we want beta[118,0] / beta[118,1]
+    ratio = beta[118,0] / beta[118,1]
+    return ratio
 
 #Question 3, Implement and run the Baum-Welch algorithm using the Forward and Backward
 #algorithms from q2.  Initialize \pi, a, b with a guess of our choise
 
-path_for_q2 = forward_algorithm(states=states, init=pi, trans=trans, emit=emit, obs=df_q2.iloc[0].to_numpy())
-print(path_for_q2)
+alpha_ratio, u = forward_algorithm(states=states, init=pi, trans=trans, emit=emit, obs=df_q2.iloc[0].to_numpy())
+beta_ratio = backward_algorithm(states=states, trans=trans, emit=emit, obs=df_q2.iloc[0].to_numpy(), u=u)
+
+#Question 3, impliment the Baum-Welch algorithm using the forward and backward algorithms from q2.  
+#Initialize \pi, a, b with a guess of our choice.  report the final values of \pi, a, b.
+
+df_q3 = pd.read_csv("assignments/hw09/data/hmm_pb2.csv", header=None)
+print(df_q3.head())
+
+#need to define the Baum-Welch algorithm.
+def baum_welch(seed=123):
+    #define the random generator for reproducibility
+    rng = np.random.default_rng(seed)
+    
+    #need to initialize parameters at random.
+    pi = 
+    pass
