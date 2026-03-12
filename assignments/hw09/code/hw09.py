@@ -158,6 +158,18 @@ def Viterbi(states, init, trans, emit, obs):
     return path
 
 path = Viterbi(states=states, init=pi, trans=trans, emit=emit, obs=df_q2.iloc[0].to_numpy())
+print(path)
+
+#plot this?  I see a state sequence
+plt.figure()
+plt.plot(path, drawstyle="steps-mid")
+plt.yticks([1,2])
+plt.xlabel("Time")
+plt.ylabel("State")
+plt.title("Most Likely Hidden State Sequence (Viterbi)")
+plt.savefig("assignments/hw09/figures/state_sequence.pdf", dpi=400, bbox_inches="tight")
+plt.close()
+#plt.show()
 
 #need to do something with this.  Find a beter way to report
 
@@ -244,6 +256,9 @@ def backward_algorithm(states, trans, emit, obs, u):
 alphas, alpha_ratio, u = forward_algorithm(states=states, init=pi, trans=trans, emit=emit, obs=df_q2.iloc[0].to_numpy())
 beta_ratio, betas = backward_algorithm(states=states, trans=trans, emit=emit, obs=df_q2.iloc[0].to_numpy(), u=u)
 
+print("Ratio of alpha values at time 118:", alpha_ratio)
+print("Ratio of beta values at time 118:", beta_ratio)
+
 #Question 3, impliment the Baum-Welch algorithm using the forward and backward algorithms from q2.  
 #Initialize \pi, a, b with a guess of our choice.  report the final values of \pi, a, b.
 
@@ -267,45 +282,104 @@ def baum_welch(observed, seed=123, max_iters = 400, tol=1e-6):
     B = rng.random((2,6))
     B = B/np.sum(B, axis=1, keepdims=True)  #normalize rows to sum to 1
 
+    #track the log likelihood at each iteration to check for convergence.
+    #https://en.wikipedia.org/wiki/Forward%E2%80%93backward_algorithm?utm_source=chatgpt.com
+    #The product of the scaling factors is the total probability for observing the given events irrespective of the final states:
+    log_likelihoods = []
+
     for iter in range(max_iters):
+        if iter % 10 == 0:
+            print(f"Iteration {iter}")
+        
+        #get emissions for current params
+        emit_current = {
+            1: {1: B[0, 0], 2: B[0, 1], 3: B[0, 2], 4: B[0, 3], 5: B[0, 4], 6: B[0, 5]},
+            2: {1: B[1, 0], 2: B[1, 1], 3: B[1, 2], 4: B[1, 3], 5: B[1, 4], 6: B[1, 5]}
+        }
         #E step: compute the forward and backward probabilities
-        alpha = np.zeros((len(df_q3), 2))
-        beta = np.zeros((len(df_q3), 2))
-        u = np.zeros(len(df_q3))
+        #Expectation step: compute the forward and backward probabilities
+        alpha, _, u = forward_algorithm(states=states, init=pi, trans=A, emit=emit_current, obs=observed)
+        _, beta = backward_algorithm(states=states, trans=A, emit=emit_current, obs=observed, u=u)
 
-        #forward pass
-        for t in range(len(df_q3)):
-            #Expectation step: compute the forward and backward probabilities
-            alpha, _, u = forward_algorithm(states=states, init=pi, trans=A, emit={1: {1: B[0,0], 2: B[0,1], 3: B[0,2], 4: B[0,3], 5: B[0,4], 6: B[0,5]},
-                                            2: {1: B[1,0], 2: B[1,1], 3: B[1,2], 4: B[1,3], 5: B[1,4], 6: B[1,5]}} , obs=df_q3.iloc[t].to_numpy())
-            beta, _ = backward_algorithm(states=states, trans=A, emit={1: {1: B[0,0], 2: B[0,1], 3: B[0,2], 4: B[0,3], 5: B[0,4], 6: B[0,5]},
-                                            2: {1: B[1,0], 2: B[1,1], 3: B[1,2], 4: B[1,3], 5: B[1,4], 6: B[1,5]}} , obs=df_q3.iloc[t].to_numpy(), u=u)    
+        #update log likelihood
+        log_likelihood = np.sum(np.log(u))
+        log_likelihoods.append(log_likelihood)    
             
-            gamma = np.zeros((T, 2))
-            for t in range(T):
-                denom = 0.0
-                for k in range(2):
-                    denom += alpha[t, k] * beta[t, k]
-                for i in range(2):
-                    gamma[t, i] = (alpha[t, i] * beta[t, i]) / denom
+        gamma = np.zeros((T, 2))
+        for t in range(T):
+            denom = 0.0
+            for k in range(2):
+                denom += alpha[t, k] * beta[t, k]
+            for i in range(2):
+                gamma[t, i] = (alpha[t, i] * beta[t, i]) / denom
             
-            #computed Xi from the slides
-            xi = np.zeros((T-1, 2, 2))
-            for t in range(T-1):
-                denom = 0.0
-                for i in range(2):
-                    for j in range(2):
-                        denom += alpha[t, i] * A[i, j] * B[j, df_q3.iloc[t+1]-1] * beta[t+1, j]
-                for i in range(2):
-                    for j in range(2):
-                        xi[t, i, j] = (alpha[t, i] * A[i, j] * B[j, df_q3.iloc[t+1]-1] * beta[t+1, j]) / denom
+        #computed Xi from the slides
+        xi = np.zeros((T-1, 2, 2))
+        for t in range(T-1):
+            denom = 0.0
+            for k in range(2):
+                for l in range(2):
+                    denom += alpha[t, k] * A[k, l] * beta[t+1, l] * B[l, observed[t+1] - 1]
+            
+            #kept getting errors here.  Debugging stuff
+            # if denom == 0 or np.isnan(denom):
+            #     print("problem at t =", t)
+            #     print("observed[t+1] =", observed[t+1])
+            #     print("alpha[t] =", alpha[t])
+            #     print("beta[t+1] =", beta[t+1])
+            #     print("A =\n", A)
+            #     print("B =\n", B)
 
-            #M step: update the parameters
-            #update pi
-            pi = gamma[0]
-            A_new = np.zeros((2, 2))
+            for i in range(2):
+                for j in range(2):
+                    numer = alpha[t, i] * A[i, j] * beta[t+1, j] * B[j, observed[t+1] - 1]
+                    xi[t, i, j] = numer / denom
+
+        #M step: update the parameters
+        #update pi
+        pi_new = gamma[0]
+        A_new = np.zeros((2, 2))
+            
+        for i in range(2):
+            denom = np.sum(gamma[:-1, i])
+            for j in range(2):
+                A_new[i, j] = np.sum(xi[:, i, j]) / denom
+
+        B_new = np.zeros((2, 6))
+        for i in range(2):
+            denom = np.sum(gamma[:, i])
+            for k in range(1, 7):
+                numer = 0.0
+                for t in range(T):
+                    if  observed[t] == k:
+                        numer += gamma[t, i]
+                B_new[i, k-1] = numer / denom
+
+        #update parameters
+        pi = pi_new
+        A = A_new
+        B = B_new
+
+        #convergence check.  See if the log likelihood has changed by less than the tolerance level.  If it has, we can stop.
+        if len(log_likelihoods) > 1 and abs(log_likelihoods[-1] - log_likelihoods[-2]) < tol:
+            print(f"Converged at iteration {iter}")
+
+            #plot the log likelihood trace
+            plt.figure()
+            plt.plot(log_likelihoods)
+            plt.xlabel("Iteration")
+            plt.ylabel("Log Likelihood")
+            plt.title(f"Baum-Welch Log-Likelihood Trace (tol={tol})")
+            plt.grid(True)
+            plt.savefig("assignments/hw09/figures/log_likelihood_trace.pdf", dpi=400, bbox_inches="tight")
+            plt.close()
+            #plt.show()
+
             break
-    
+    return pi, A, B, log_likelihoods
+            
 
-
-q3 = baum_welch()
+pi_hat, A_hat, B_hat, log_likelihoods = baum_welch(df_q3.iloc[0].to_numpy(), max_iters=2000)
+print("pi_hat =", pi_hat)
+print("A_hat =\n", A_hat)
+print("B_hat =\n", B_hat)
