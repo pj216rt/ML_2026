@@ -158,7 +158,21 @@ def Viterbi(states, init, trans, emit, obs):
     return path
 
 path = Viterbi(states=states, init=pi, trans=trans, emit=emit, obs=df_q2.iloc[0].to_numpy())
-print(path)
+
+#breaking this into chunks to make it easier to read
+chunk_size = 50
+
+with open("assignments/hw09/output/viterbi_path.tex", "w") as f:
+    f.write("\\[\n")
+    f.write("\\begin{aligned}\n")
+    f.write("&\\text{Viterbi sequence: } \\\\\n")
+
+    for i in range(0, len(path), chunk_size):
+        chunk = path[i:i+chunk_size]
+        f.write("&" + " ".join(str(x) for x in chunk) + " \\\\\n")
+
+    f.write("\\end{aligned}\n")
+    f.write("\\]\n")
 
 #plot this?  I see a state sequence
 plt.figure()
@@ -383,3 +397,38 @@ pi_hat, A_hat, B_hat, log_likelihoods = baum_welch(df_q3.iloc[0].to_numpy(), max
 print("pi_hat =", pi_hat)
 print("A_hat =\n", A_hat)
 print("B_hat =\n", B_hat)
+
+#save these estimates to a latex file.  Round to 4 decimal places for readability.
+#updates whenever this code is run
+with open("assignments/hw09/output/hmm_estimates.tex", "w") as f:
+
+    #a whole bunch of excape characters \
+    #pi
+    f.write("\\[\n")
+    #\hat{\pi} =
+    f.write("\\hat{\\pi} =\n")
+    f.write("\\begin{bmatrix}\n")
+    #loop through \pi values and write them to the file, rounded to 4 decimal places.
+    f.write(" & ".join(f"{x:.4f}" for x in pi_hat))
+    f.write("\n\\end{bmatrix}\n")
+    f.write("\\]\n\n")
+
+    #A
+    f.write("\\[\n")
+    f.write("\\hat{A} =\n")
+    f.write("\\begin{bmatrix}\n")
+    #loop over rows
+    for row in A_hat:
+        #quad backslashes to excape
+        f.write(" & ".join(f"{x:.4f}" for x in row) + " \\\\\n")
+    f.write("\\end{bmatrix}\n")
+    f.write("\\]\n\n")
+
+    #Emission matrix B
+    f.write("\\[\n")
+    f.write("\\hat{B} =\n")
+    f.write("\\begin{bmatrix}\n")
+    for row in B_hat:
+        f.write(" & ".join(f"{x:.4f}" for x in row) + " \\\\\n")
+    f.write("\\end{bmatrix}\n")
+    f.write("\\]\n")
