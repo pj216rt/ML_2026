@@ -91,11 +91,20 @@ plt.close()
 #https://en.wikipedia.org/wiki/Viterbi_algorithm#Pseudocode
 df_q2 = pd.read_csv("assignments/hw09/data/hmm_pb1.csv", header=None)
 
+#part a, Virterbi algo.
+
 #states, 1 = Fair, 2 = Loaded
 states = [1, 2]
 
 #initial probabilities
 pi = np.array([0.5, 0.5])
+
+#chose these probabilties from
+#https://hmmlearn.readthedocs.io/en/latest/auto_examples/plot_casino.html
+trans = np.array([
+    [0.95, 0.05],   #fair
+    [0.10, 0.90]    #loaded
+])
 
 #need emission probabilities.  P(roll | state)
 #fair die, 1/6 for each roll.  loaded die, 1/10 for 1-5 and 1/2 for 6.
@@ -108,4 +117,108 @@ emit = {
 def Viterbi(states, init, trans, emit, obs):
     #get number of observations
     T = len(obs)
-    print("Hello")
+    S = len(states)
+
+    #need log probabiilities
+    log_init = np.log(init)
+    log_trans = np.log(trans)
+
+    #need prob and prev.  need prev to be integer, bc it is storing the state
+    #init as -ingf bc of log space
+    log_prob = np.full((T, S), -np.inf)
+    prev = np.zeros((T, S), dtype=int)
+
+    #initialize 
+    #need to remember that python indexes start from 0, need to subtract 1 from state to get the right index in the prob array
+    for s in states:
+        log_prob[0][s-1] = log_init[s-1] + np.log(emit[s][obs[0]])
+
+    #recursion portion
+    for t in range(1, T):
+        for s in states:
+            for r in states:
+                #summations bc of log space
+                new_prob = (
+                    log_prob[t-1][r-1]
+                    + log_trans[r-1][s-1]
+                    + np.log(emit[s][obs[t]])
+                )
+
+                if new_prob > log_prob[t][s-1]:
+                    log_prob[t][s-1] = new_prob
+                    prev[t][s-1] = r
+    
+    #empty array of length T.  Need this to be integer
+    path = np.zeros(T, dtype=int)
+    path[T - 1] = np.argmax(log_prob[T - 1]) + 1
+
+    for t in range(T - 2, -1, -1):
+        path[t] = prev[t + 1][path[t+1] - 1]
+
+    return path
+
+path = Viterbi(states=states, init=pi, trans=trans, emit=emit, obs=df_q2.iloc[0].to_numpy())
+print(path)
+
+#need to do something with this.  Find a beter way to report
+
+#implement the forward algorithm for the same sequence of dice rolls.
+#need to renormalize the alpha values at each step to prevent underflow.
+def forward_algorithm(states, init, trans, emit, obs):
+    #length of the rice rolls
+    T = len(obs)
+
+    #number of hidden states
+    S = len(states)
+
+    #initialize alpha.  alpha[t,s] is the forward probability \alpha_t^s.
+    #each row is a time t and each column is a state s
+    alpha = np.zeros((T, S))
+
+    #scaling factor used at time t.  
+    u = np.zeros(T)
+
+    #\alpha_1^k = \pi_k * b_{x_1}^k
+    for s in states:
+        alpha[0][s-1] = init[s-1] * emit[s][obs[0]]
+    
+    #scaling alpha 0
+    u[0] = np.sum(alpha[0])
+    alpha[0] = alpha[0] / u[0]
+
+    for t in range(1, T):
+        for s in states:
+            sum_alpha = 0
+
+            #sum over all possible previous states r.
+            for r in states:
+                sum_alpha += alpha[t-1][r-1] * trans[r-1][s-1]
+            
+            #multiply by the emission prob
+            alpha[t][s-1] = sum_alpha * emit[s][obs[t]]
+        
+        #scaling alpha t
+        u[t] = np.sum(alpha[t])
+        alpha[t] = alpha[t] / u[t]
+    
+    #asked to report the ratio of the alpha values at time 118.
+    #time 118 -> row 118
+    #state 1 is column 0, state 2 is column 1.  So we want alpha[118,0] / alpha[118,1]
+    ratio = alpha[118,0] / alpha[118,1]
+
+    return ratio
+
+#function to implement the backward algorithm for the same sequence of dice rolls.
+def backward_algorithm(states, init, trans, emit, obs):
+    #number of observations
+    T = len(obs)
+
+    #number of hidden states
+    S = len(states)
+
+
+#Question 3, Implement and run the Baum-Welch algorithm using the Forward and Backward
+#algorithms from q2.  Initialize \pi, a, b with a guess of our choise
+
+path_for_q2 = forward_algorithm(states=states, init=pi, trans=trans, emit=emit, obs=df_q2.iloc[0].to_numpy())
+print(path_for_q2)
