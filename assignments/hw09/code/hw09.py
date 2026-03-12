@@ -207,7 +207,7 @@ def forward_algorithm(states, init, trans, emit, obs):
     ratio = alpha[118,0] / alpha[118,1]
 
     #ratio, alpha, and u.  u is needed for backward algo
-    return ratio, u
+    return alpha, ratio, u
 
 #function to implement the backward algorithm for the same sequence of dice rolls.
 #using the algorithm from pg 23 of the slide
@@ -238,25 +238,74 @@ def backward_algorithm(states, trans, emit, obs, u):
     #time 118 -> row 118
     #state 1 is column 0, state 2 is column 1.  So we want beta[118,0] / beta[118,1]
     ratio = beta[118,0] / beta[118,1]
-    return ratio
+    return ratio, beta
 
-#Question 3, Implement and run the Baum-Welch algorithm using the Forward and Backward
-#algorithms from q2.  Initialize \pi, a, b with a guess of our choise
 
-alpha_ratio, u = forward_algorithm(states=states, init=pi, trans=trans, emit=emit, obs=df_q2.iloc[0].to_numpy())
-beta_ratio = backward_algorithm(states=states, trans=trans, emit=emit, obs=df_q2.iloc[0].to_numpy(), u=u)
+alphas, alpha_ratio, u = forward_algorithm(states=states, init=pi, trans=trans, emit=emit, obs=df_q2.iloc[0].to_numpy())
+beta_ratio, betas = backward_algorithm(states=states, trans=trans, emit=emit, obs=df_q2.iloc[0].to_numpy(), u=u)
 
 #Question 3, impliment the Baum-Welch algorithm using the forward and backward algorithms from q2.  
 #Initialize \pi, a, b with a guess of our choice.  report the final values of \pi, a, b.
 
 df_q3 = pd.read_csv("assignments/hw09/data/hmm_pb2.csv", header=None)
-print(df_q3.head())
 
 #need to define the Baum-Welch algorithm.
-def baum_welch(seed=123):
+def baum_welch(observed, seed=123, max_iters = 400, tol=1e-6):
     #define the random generator for reproducibility
     rng = np.random.default_rng(seed)
-    
+
+    states = [1, 2]
+    T = len(observed)
+
     #need to initialize parameters at random.
-    pi = 
-    pass
+    pi = rng.random(2)
+    pi = pi/pi.sum()  #normalize to sum to 1
+
+    A = rng.random((2,2))
+    A = A/np.sum(A, axis=1, keepdims=True)  #normalize rows to sum to 1
+
+    B = rng.random((2,6))
+    B = B/np.sum(B, axis=1, keepdims=True)  #normalize rows to sum to 1
+
+    for iter in range(max_iters):
+        #E step: compute the forward and backward probabilities
+        alpha = np.zeros((len(df_q3), 2))
+        beta = np.zeros((len(df_q3), 2))
+        u = np.zeros(len(df_q3))
+
+        #forward pass
+        for t in range(len(df_q3)):
+            #Expectation step: compute the forward and backward probabilities
+            alpha, _, u = forward_algorithm(states=states, init=pi, trans=A, emit={1: {1: B[0,0], 2: B[0,1], 3: B[0,2], 4: B[0,3], 5: B[0,4], 6: B[0,5]},
+                                            2: {1: B[1,0], 2: B[1,1], 3: B[1,2], 4: B[1,3], 5: B[1,4], 6: B[1,5]}} , obs=df_q3.iloc[t].to_numpy())
+            beta, _ = backward_algorithm(states=states, trans=A, emit={1: {1: B[0,0], 2: B[0,1], 3: B[0,2], 4: B[0,3], 5: B[0,4], 6: B[0,5]},
+                                            2: {1: B[1,0], 2: B[1,1], 3: B[1,2], 4: B[1,3], 5: B[1,4], 6: B[1,5]}} , obs=df_q3.iloc[t].to_numpy(), u=u)    
+            
+            gamma = np.zeros((T, 2))
+            for t in range(T):
+                denom = 0.0
+                for k in range(2):
+                    denom += alpha[t, k] * beta[t, k]
+                for i in range(2):
+                    gamma[t, i] = (alpha[t, i] * beta[t, i]) / denom
+            
+            #computed Xi from the slides
+            xi = np.zeros((T-1, 2, 2))
+            for t in range(T-1):
+                denom = 0.0
+                for i in range(2):
+                    for j in range(2):
+                        denom += alpha[t, i] * A[i, j] * B[j, df_q3.iloc[t+1]-1] * beta[t+1, j]
+                for i in range(2):
+                    for j in range(2):
+                        xi[t, i, j] = (alpha[t, i] * A[i, j] * B[j, df_q3.iloc[t+1]-1] * beta[t+1, j]) / denom
+
+            #M step: update the parameters
+            #update pi
+            pi = gamma[0]
+            A_new = np.zeros((2, 2))
+            break
+    
+
+
+q3 = baum_welch()
