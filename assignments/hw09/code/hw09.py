@@ -25,9 +25,9 @@ def objective(vars):
 
     #Euclidean distance between the three variables.  Want to minimize this.
     #pdist wasn't working, so I just wrote it out.
-    temp = ((variable1 - variable2)**2 +
-            (variable1 - variable3)**2 +
-            (variable2 - variable3)**2)
+    temp = ((variable1-variable2)**2 +
+            (variable1-variable3)**2 +
+            (variable2-variable3)**2)
 
     return temp
 
@@ -59,7 +59,8 @@ LATEX_table = df1.to_latex(
     caption=None,
     label=None,
     column_format="c" * df1.shape[1],
-    escape=True
+    escape=True,
+    float_format="%.4f"
 )
 
 #save latex table
@@ -92,7 +93,6 @@ plt.close()
 df_q2 = pd.read_csv("assignments/hw09/data/hmm_pb1.csv", header=None)
 
 #part a, Virterbi algo.
-
 #states, 1 = Fair, 2 = Loaded
 states = [1, 2]
 
@@ -139,9 +139,7 @@ def Viterbi(states, init, trans, emit, obs):
             for r in states:
                 #summations bc of log space
                 new_prob = (
-                    log_prob[t-1][r-1]
-                    + log_trans[r-1][s-1]
-                    + np.log(emit[s][obs[t]])
+                    log_prob[t-1][r-1] + log_trans[r-1][s-1] + np.log(emit[s][obs[t]])
                 )
 
                 if new_prob > log_prob[t][s-1]:
@@ -305,7 +303,7 @@ def baum_welch(observed, seed=123, max_iters = 400, tol=1e-6):
         if iter % 10 == 0:
             print(f"Iteration {iter}")
         
-        #get emissions for current params
+        #get emissions for current params instead of a static emission mat
         emit_current = {
             1: {1: B[0, 0], 2: B[0, 1], 3: B[0, 2], 4: B[0, 3], 5: B[0, 4], 6: B[0, 5]},
             2: {1: B[1, 0], 2: B[1, 1], 3: B[1, 2], 4: B[1, 3], 5: B[1, 4], 6: B[1, 5]}
@@ -318,14 +316,15 @@ def baum_welch(observed, seed=123, max_iters = 400, tol=1e-6):
         #update log likelihood
         log_likelihood = np.sum(np.log(u))
         log_likelihoods.append(log_likelihood)    
-            
+        
+        #computing gamma from the slides
         gamma = np.zeros((T, 2))
         for t in range(T):
             denom = 0.0
             for k in range(2):
                 denom += alpha[t, k] * beta[t, k]
             for i in range(2):
-                gamma[t, i] = (alpha[t, i] * beta[t, i]) / denom
+                gamma[t, i] = (alpha[t, i] * beta[t, i])/denom
             
         #computed Xi from the slides
         xi = np.zeros((T-1, 2, 2))
@@ -333,7 +332,7 @@ def baum_welch(observed, seed=123, max_iters = 400, tol=1e-6):
             denom = 0.0
             for k in range(2):
                 for l in range(2):
-                    denom += alpha[t, k] * A[k, l] * beta[t+1, l] * B[l, observed[t+1] - 1]
+                    denom = denom + alpha[t, k]*A[k, l] * beta[t+1, l]*B[l, observed[t+1] - 1]
             
             #kept getting errors here.  Debugging stuff
             # if denom == 0 or np.isnan(denom):
@@ -346,18 +345,18 @@ def baum_welch(observed, seed=123, max_iters = 400, tol=1e-6):
 
             for i in range(2):
                 for j in range(2):
-                    numer = alpha[t, i] * A[i, j] * beta[t+1, j] * B[j, observed[t+1] - 1]
-                    xi[t, i, j] = numer / denom
+                    numer = alpha[t, i]*A[i, j] * beta[t+1, j]*B[j, observed[t+1] - 1]
+                    xi[t, i, j] = numer/denom
 
         #M step: update the parameters
         #update pi
         pi_new = gamma[0]
+
         A_new = np.zeros((2, 2))
-            
         for i in range(2):
             denom = np.sum(gamma[:-1, i])
             for j in range(2):
-                A_new[i, j] = np.sum(xi[:, i, j]) / denom
+                A_new[i, j] = np.sum(xi[:, i, j])/denom
 
         B_new = np.zeros((2, 6))
         for i in range(2):
@@ -365,9 +364,10 @@ def baum_welch(observed, seed=123, max_iters = 400, tol=1e-6):
             for k in range(1, 7):
                 numer = 0.0
                 for t in range(T):
+                    #indicator variable for if x=k
                     if  observed[t] == k:
-                        numer += gamma[t, i]
-                B_new[i, k-1] = numer / denom
+                        numer = numer + gamma[t, i]
+                B_new[i, k-1] = numer/denom
 
         #update parameters
         pi = pi_new
@@ -375,6 +375,7 @@ def baum_welch(observed, seed=123, max_iters = 400, tol=1e-6):
         B = B_new
 
         #convergence check.  See if the log likelihood has changed by less than the tolerance level.  If it has, we can stop.
+        #don't need this for the hw
         if len(log_likelihoods) > 1 and abs(log_likelihoods[-1] - log_likelihoods[-2]) < tol:
             print(f"Converged at iteration {iter}")
 
@@ -393,10 +394,7 @@ def baum_welch(observed, seed=123, max_iters = 400, tol=1e-6):
     return pi, A, B, log_likelihoods
             
 
-pi_hat, A_hat, B_hat, log_likelihoods = baum_welch(df_q3.iloc[0].to_numpy(), max_iters=2000)
-print("pi_hat =", pi_hat)
-print("A_hat =\n", A_hat)
-print("B_hat =\n", B_hat)
+pi_hat, A_hat, B_hat, log_likelihoods = baum_welch(df_q3.iloc[0].to_numpy(), max_iters=2000, tol=1e-3)
 
 #save these estimates to a latex file.  Round to 4 decimal places for readability.
 #updates whenever this code is run
