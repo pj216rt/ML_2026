@@ -1,5 +1,8 @@
 import numpy as np
 import pandas as pd
+from scipy.sparse.linalg import svds
+from scipy.sparse import diags
+from sklearn.cluster import KMeans
 import matplotlib.pyplot as plt
 from PIL import Image
 from scipy.sparse import coo_matrix
@@ -52,13 +55,40 @@ def spectral_clustering(image_array, sigma, n_clusters, random_state):
 
     #build the affinity matrix
     A = build_affinity_matrix(image_array, sigma)
+    print(A.shape)
 
     #need the Degree matrix.  Simply the sum of the four neighbors for each pixel
-    D = A.sum(axis=1)
-    print(D.shape)
+    #need sparse matrix
+    #https://docs.scipy.org/doc/scipy/reference/generated/scipy.sparse.diags.html
+    D = np.array(A.sum(axis=1)).flatten()
+    
+    #need D inverse square root
+    D_inv_sqrt = diags(D**(-0.5))
+    print(D_inv_sqrt.shape)
+
+    #feed this into svd.  Pg 27 in notes
+    D_mangled = D_inv_sqrt @ A @ D_inv_sqrt
+
+    U, S, VT = svds(D_mangled, k=n_clusters)
+
+    #normalize the rows to have unit length
+    U_rows_norm = np.linalg.norm(U, axis=1, keepdims=True)
+    U_normalized = U / U_rows_norm
+
+    #run k means
+    kmeans = KMeans(n_clusters=n_clusters, random_state=random_state)
+    labels = kmeans.fit_predict(U_normalized)
+
+    label_image = labels.reshape(height, width)
+
+    return label_image, labels, A
 
 #part a
 sigmas = [0.1, 0.2, 0.05]
 
 for sigma in sigmas:
-    break
+    label_image, labels, A = spectral_clustering(
+        image_array=img_array,
+        sigma=sigma,
+        n_clusters=4, random_state=123
+    )
