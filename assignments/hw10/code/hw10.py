@@ -2,46 +2,63 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 from PIL import Image
+from scipy.sparse import coo_matrix
 
 #found this for working with images
 #https://pillow.readthedocs.io/en/stable/reference/Image.html
 #https://stackoverflow.com/questions/51321960/import-image-in-python
 #https://pillow.readthedocs.io/en/stable/reference/Image.html#PIL.Image.Image.convert
 
-#load the images
+#load the image and convert to numpy array and normalize
 img = Image.open('assignments/hw10/data/horse027.jpg').convert("RGB")
-
-#convert to numpy array
 img_array = np.array(img)
-
-#normalize image
 img_array = img_array / 255.0
 
-#get dims of img_array
-height, width, channels = img_array.shape
-n_pixels = height*width
+#function for affinity matrix
+#use sparse matrices for speed
+#https://www.geeksforgeeks.org/python/how-to-create-a-sparse-matrix-in-python/
+def build_affinity_matrix(img_array, sigma):
+    height, width, channels = img_array.shape
+    n_pixels = height*width
+    rows = []
+    cols = []
+    data = []
+    
+    for row in range(height):
+        for column in range(width):
+            I_i = img_array[row, column]
+            i = (row*width) + column
 
-sigma = 0.1
+            for neighbor_row, neighbor_column in [(row-1, column), (row+1, column), (row, column-1), (row, column+1)]:
+                if 0 <= neighbor_row < height and 0 <= neighbor_column < width:
+                    I_j = img_array[neighbor_row, neighbor_column]
+                    j = (neighbor_row*width) + neighbor_column
 
-#initialize an empty affinity matrix
-A = np.zeros((n_pixels, n_pixels))
+                    diff = I_i - I_j
+                    dist_sq = np.sum(diff**2)
 
-#affinity matrix.  For each pixel, get its RGB value, and compare its four nieghbors.  
-#loop over every pixel.  Need to convert from row,column to a single index
-for row in range(height):
-    for column in range(width):
-        #get RGB triplet
-        I_i = img_array[row, column]
+                    affin = np.exp(-dist_sq / sigma**2)
+                    rows.append(i)
+                    cols.append(j)
+                    data.append(affin)
+    A = coo_matrix((data, (rows, cols)), shape=(n_pixels, n_pixels))
 
-        #loop over the four neighbors
-        for neighbor_row, neighbor_column in [(row-1, column), (row+1, column), (row, column-1), (row, column+1)]:
-            #check if neighbor is within bounds
-            if 0 <= neighbor_row < height and 0 <= neighbor_column < width:
-                #get RGB triplet of neighbor
-                I_j = img_array[neighbor_row, neighbor_column]
+    return A.tocsr()
 
-                diff = I_i - I_j
-                dist_sq = np.sum(diff**2)
+#function for spectral clustering
+def spectral_clustering(image_array, sigma, n_clusters, random_state):
+    height, width, channels = image_array.shape
+    n_pixels = height*width
 
-                #compute affinity using the formula:
-                A[row, column, neighbor_row, neighbor_column] = np.exp(-dist_sq / sigma**2)
+    #build the affinity matrix
+    A = build_affinity_matrix(image_array, sigma)
+
+    #need the Degree matrix.  Simply the sum of the four neighbors for each pixel
+    D = A.sum(axis=1)
+    print(D.shape)
+
+#part a
+sigmas = [0.1, 0.2, 0.05]
+
+for sigma in sigmas:
+    break
