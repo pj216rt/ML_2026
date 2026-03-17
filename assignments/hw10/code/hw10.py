@@ -19,11 +19,15 @@ img_array = img_array / 255.0
 
 #get dims of img_array
 height, width, channels = img_array.shape
+n_pixels = height*width
 
 sigma = 0.1
 
+#initialize an empty affinity matrix
+A = np.zeros((n_pixels, n_pixels))
+
 #affinity matrix.  For each pixel, get its RGB value, and compare its four nieghbors.  
-#loop over every pixel
+#loop over every pixel.  Need to convert from row,column to a single index
 for row in range(height):
     for column in range(width):
         #get RGB triplet
@@ -36,5 +40,8 @@ for row in range(height):
                 #get RGB triplet of neighbor
                 I_j = img_array[neighbor_row, neighbor_column]
 
+                diff = I_i - I_j
+                dist_sq = np.sum(diff**2)
+
                 #compute affinity using the formula:
-                affinity = np.exp(-np.linalg.norm(I_i - I_j)**2 / (2*sigma**2))
+                A[row, column, neighbor_row, neighbor_column] = np.exp(-dist_sq / sigma**2)
