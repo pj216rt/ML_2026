@@ -295,7 +295,7 @@ def baum_welch(observed, seed=123, max_iters = 400, tol=1e-6):
     B = B/np.sum(B, axis=1, keepdims=True)  #normalize rows to sum to 1
 
     #track the log likelihood at each iteration to check for convergence.
-    #https://en.wikipedia.org/wiki/Forward%E2%80%93backward_algorithm?utm_source=chatgpt.com
+    #https://en.wikipedia.org/wiki/Forward%E2%80%93backward_algorithm
     #The product of the scaling factors is the total probability for observing the given events irrespective of the final states:
     log_likelihoods = []
 
