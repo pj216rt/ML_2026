@@ -4,6 +4,7 @@ from scipy.sparse.linalg import svds
 from scipy.sparse import diags
 from sklearn.cluster import KMeans
 import matplotlib.pyplot as plt
+from scipy.sparse.linalg import eigsh
 from PIL import Image
 from scipy.sparse import coo_matrix
 
@@ -69,11 +70,14 @@ def spectral_clustering(image_array, sigma, n_clusters, random_state):
     #feed this into svd.  Pg 27 in notes
     D_mangled = D_inv_sqrt @ A @ D_inv_sqrt
 
-    U, S, VT = svds(D_mangled, k=n_clusters)
+    # U, S, VT = svds(D_mangled, k=n_clusters)
+    S, U = eigsh(D_mangled, k=n_clusters, which="LA")
+    print("SVDS")
 
     #normalize the rows to have unit length
     U_rows_norm = np.linalg.norm(U, axis=1, keepdims=True)
     U_normalized = U / U_rows_norm
+    print("normalized")
 
     #run k means
     kmeans = KMeans(n_clusters=n_clusters, random_state=random_state)
@@ -86,8 +90,12 @@ def spectral_clustering(image_array, sigma, n_clusters, random_state):
 #part a
 sigmas = [0.1, 0.2, 0.05]
 
+#working with a smaller version of the image
+# img_small = img_array[::2, ::2, :]
+
 for sigma in sigmas:
     label_image, labels, A = spectral_clustering(
+        #image_array=img_array,
         image_array=img_array,
         sigma=sigma,
         n_clusters=4, random_state=123
