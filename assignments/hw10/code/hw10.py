@@ -124,7 +124,6 @@ def spectral_clustering(image_array, sigma, n_clusters, random_state):
 
     return label_image, labels, A
 
-#part a
 sigmas = [0.1, 0.2, 0.05]
 
 #working with a smaller version of the image
@@ -138,9 +137,13 @@ for sigma in sigmas:
         n_clusters=4, random_state=123
     )
 
-    #plotting
+    #plotting part a
     plt.figure()
     plt.imshow(label_image, cmap="tab10")
     plt.title(f"Spectral clustering with 4 clusters, sigma={sigma}")
     plt.axis("off")
     plt.show()
+
+    #part b
+    #getting the mean of all RGB values
+    
