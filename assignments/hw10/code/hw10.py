@@ -48,16 +48,24 @@ def build_affinity_matrix(img_array, sigma):
 
                 #check if the neighbor is within the image boundaries
                 if 0 <= neighbor_row < height and 0 <= neighbor_column < width:
+
+                    #get RGB vector for neighbor
                     I_j = img_array[neighbor_row, neighbor_column]
+
+                    #get neighbor index
                     j = (neighbor_row*width) + neighbor_column
 
+                    #compute the squared eucliodian distance
                     diff = I_i - I_j
                     dist_sq = np.sum(diff**2)
 
+                    #compute the affinity and store in the lists for the sparse matrix
                     affin = np.exp(-dist_sq / sigma**2)
                     rows.append(i)
                     cols.append(j)
                     data.append(affin)
+
+    #build the sparse affinity matrix
     A = coo_matrix((data, (rows, cols)), shape=(n_pixels, n_pixels))
 
     return A.tocsr()
@@ -65,9 +73,12 @@ def build_affinity_matrix(img_array, sigma):
 #function for spectral clustering
 #build A on CPU.  Run svd_lowrank on torch
 def spectral_clustering(image_array, sigma, n_clusters, random_state):
+
+    #image dimensions and total number of pixels
     height, width, channels = image_array.shape
     n_pixels = height*width
 
+    #set the torch device and random seed
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     torch.manual_seed(random_state)
 
@@ -81,7 +92,7 @@ def spectral_clustering(image_array, sigma, n_clusters, random_state):
     #need sparse matrix
     #https://docs.scipy.org/doc/scipy/reference/generated/scipy.sparse.diags.html
     D = np.array(A.sum(axis=1)).flatten()
-    D = np.maximum(D, 1e-10)  #avoid dividing by 0
+    #D = np.maximum(D, 1e-10)  #avoid dividing by 0
     print("min degree:", D.min(), "max degree:", D.max(), "num zeros:", np.sum(D == 0))
     
     #need D inverse square root
@@ -95,6 +106,7 @@ def spectral_clustering(image_array, sigma, n_clusters, random_state):
 
     #need to convert the matrix to a sparse tensor for torch.
     #the linalg>svds just took too long and didn't converge
+    #row and column indices
     indices = np.vstack((L.row, L.col))
     indices = torch.from_numpy(indices).long()
     values = torch.from_numpy(L.data).float()
@@ -104,33 +116,34 @@ def spectral_clustering(image_array, sigma, n_clusters, random_state):
         values,
         size=L.shape,
         device=device
-    ).coalesce()
+    )
 
     #run svd_lowrank on torch
     #https://pytorch.org/docs/stable/generated/torch.linalg.svd.html#torch.linalg.svd
+    #q needs to be a "slightlyt overestimates rank of the matrix"
+    #increaing niter can lead to better approximations
     U, S, Vh = torch.svd_lowrank(L_tensor, q=n_clusters+5, niter=10)
     t3 = time.time()
     print(f"svd_lowrank: {t3 - t2:.2f} sec") 
 
-    #low rank approximation.  Take the first n_clusters columns of U
+    #take first n_clusters columns of U
+    #each row of E is the embedding of a pixel in the n_clusters dimensional space.  We will run k-means on these
     E = U[:, :n_clusters].cpu().numpy()
     print("E finite before norm:", np.all(np.isfinite(E)))
 
-    #normalize rows
+    #normalize the rows of E.  Need to avoid dividing by zero.  Ran into issues here if we didn't
     E_row_norms = np.linalg.norm(E, axis=1, keepdims=True)
     print("min row norm:", E_row_norms.min(), "num zero row norms:", np.sum(E_row_norms <= 1e-12))
     E_row_norms = np.maximum(E_row_norms, 1e-12)
     E_normalized = E / E_row_norms
 
-    #kmeans
+    #k-means
     kmeans = KMeans(n_clusters=n_clusters, random_state=random_state, n_init=10)
     labels = kmeans.fit_predict(E_normalized)
     t4 = time.time()
     print(f"kmeans: {t4 - t3:.2f} sec")
 
-    #debug
-    print("cluster sizes:", np.bincount(labels))
-
+    #reshape the labels back to the image dimensions for visualization
     label_image = labels.reshape(height, width)
 
     return label_image, labels, A
