@@ -1,10 +1,8 @@
 import numpy as np
 import pandas as pd
-from scipy.sparse.linalg import svds
 from scipy.sparse import diags
 from sklearn.cluster import KMeans
 import matplotlib.pyplot as plt
-from scipy.sparse.linalg import eigsh
 from PIL import Image
 from scipy.sparse import coo_matrix
 import time
@@ -92,7 +90,6 @@ def spectral_clustering(image_array, sigma, n_clusters, random_state):
     #need sparse matrix
     #https://docs.scipy.org/doc/scipy/reference/generated/scipy.sparse.diags.html
     D = np.array(A.sum(axis=1)).flatten()
-    #D = np.maximum(D, 1e-10)  #avoid dividing by 0
     print("min degree:", D.min(), "max degree:", D.max(), "num zeros:", np.sum(D == 0))
     
     #need D inverse square root
