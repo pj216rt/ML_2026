@@ -24,18 +24,29 @@ img_array = img_array/255.0
 #use sparse matrices for speed
 #https://www.geeksforgeeks.org/python/how-to-create-a-sparse-matrix-in-python/
 def build_affinity_matrix(img_array, sigma):
+    #get image dimensions and total number of pixels
     height, width, channels = img_array.shape
     n_pixels = height*width
+
+    #initialize lists to build sparse matrix
     rows = []
     cols = []
     data = []
     
+    #loop over each pixel in the image
     for row in range(height):
         for column in range(width):
+
+            #get the RGB vector for the current pixel
             I_i = img_array[row, column]
+
+            #get index of pixel.  each row has width elements, and before row r, there r width elements.  then add the column index
             i = (row*width) + column
 
+            #loop over the neighbors (up, down, left, right) and compute the affinity.  Need to check for boundary conditions
             for neighbor_row, neighbor_column in [(row-1, column), (row+1, column), (row, column-1), (row, column+1)]:
+
+                #check if the neighbor is within the image boundaries
                 if 0 <= neighbor_row < height and 0 <= neighbor_column < width:
                     I_j = img_array[neighbor_row, neighbor_column]
                     j = (neighbor_row*width) + neighbor_column
@@ -76,16 +87,14 @@ def spectral_clustering(image_array, sigma, n_clusters, random_state):
     #need D inverse square root
     D_inv_sqrt = diags(D**(-0.5))
 
-    #issue here for the last loop through
-
-
     #feed this into svd.  Pg 27 in notes
     L = D_inv_sqrt @ A @ D_inv_sqrt
     L = L.tocoo()
     t2 = time.time()
     print(f"L: {t2 - t1:.2f} sec")
 
-    #need to convert the matrix to a sparse tensor for torch
+    #need to convert the matrix to a sparse tensor for torch.
+    #the linalg>svds just took too long and didn't converge
     indices = np.vstack((L.row, L.col))
     indices = torch.from_numpy(indices).long()
     values = torch.from_numpy(L.data).float()
@@ -99,26 +108,28 @@ def spectral_clustering(image_array, sigma, n_clusters, random_state):
 
     #run svd_lowrank on torch
     #https://pytorch.org/docs/stable/generated/torch.linalg.svd.html#torch.linalg.svd
-    U, S, Vh = torch.svd_lowrank(L_tensor, q=n_clusters, niter=5)
+    U, S, Vh = torch.svd_lowrank(L_tensor, q=n_clusters+5, niter=10)
     t3 = time.time()
     print(f"svd_lowrank: {t3 - t2:.2f} sec") 
 
-    #move U back to cpu
-    U = U.cpu().numpy()
-    print("U finite before norm:", np.all(np.isfinite(U)))
+    #low rank approximation.  Take the first n_clusters columns of U
+    E = U[:, :n_clusters].cpu().numpy()
+    print("E finite before norm:", np.all(np.isfinite(E)))
 
-    #normalize the rows to have unit length
-    U_rows_norm = np.linalg.norm(U, axis=1, keepdims=True)
-    print("min row norm:", U_rows_norm.min(), "num zero row norms:", np.sum(U_rows_norm <= 1e-12))
-    U_rows_norm = np.maximum(U_rows_norm, 1e-12)
-    U_normalized = U / U_rows_norm
-    print("normalized")
+    #normalize rows
+    E_row_norms = np.linalg.norm(E, axis=1, keepdims=True)
+    print("min row norm:", E_row_norms.min(), "num zero row norms:", np.sum(E_row_norms <= 1e-12))
+    E_row_norms = np.maximum(E_row_norms, 1e-12)
+    E_normalized = E / E_row_norms
 
-    #run k means
-    kmeans = KMeans(n_clusters=n_clusters, random_state=random_state, n_init="auto")
-    labels = kmeans.fit_predict(U_normalized)
+    #kmeans
+    kmeans = KMeans(n_clusters=n_clusters, random_state=random_state, n_init=10)
+    labels = kmeans.fit_predict(E_normalized)
     t4 = time.time()
     print(f"kmeans: {t4 - t3:.2f} sec")
+
+    #debug
+    print("cluster sizes:", np.bincount(labels))
 
     label_image = labels.reshape(height, width)
 
@@ -130,6 +141,9 @@ sigmas = [0.1, 0.2, 0.05]
 # img_small = img_array[::2, ::2, :]
 
 for sigma in sigmas:
+    height, width, channels = img_array.shape
+    n_pixels = height*width
+
     label_image, labels, A = spectral_clustering(
         #image_array=img_array,
         image_array=img_array,
@@ -145,5 +159,23 @@ for sigma in sigmas:
     plt.show()
 
     #part b
-    #getting the mean of all RGB values
+    #getting the mean of all RGB values.  Need the actual RGB values
+
+    #initialize empty pixel map
+    mean_pixels = np.zeros_like(img_array)
+
+    label_grid = labels.reshape(height, width)
+    color_image = np.zeros_like(img_array)
+    
+    for i in range(4):
+        mask = (label_grid == i)
+        if np.any(mask):
+            color_image[mask] = img_array[mask].mean(axis=0)
+    
+    #color_image = mean_pixels.reshape(height, width, 3)
+    plt.figure()
+    plt.imshow(color_image)
+    plt.title(f"Mean-color image (Sigma={sigma})")
+    plt.axis("off")
+    plt.show()
     
