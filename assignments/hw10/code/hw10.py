@@ -149,46 +149,71 @@ def spectral_clustering(image_array, sigma, n_clusters, random_state):
     return label_image, labels, A
 
 sigmas = [0.1, 0.2, 0.05]
+clusters = [4,8]
 
-#working with a smaller version of the image
-# img_small = img_array[::2, ::2, :]
-
+#loop over the various sigma values
 for sigma in sigmas:
-    height, width, channels = img_array.shape
-    n_pixels = height*width
 
-    label_image, labels, A = spectral_clustering(
-        #image_array=img_array,
-        image_array=img_array,
-        sigma=sigma,
-        n_clusters=4, random_state=123
-    )
+    #loop over the clusters
+    for cluster in clusters:
+        
+        #image dimensions and total number of pixels
+        height, width, channels = img_array.shape
+        n_pixels = height*width
 
-    #plotting part a
-    plt.figure()
-    plt.imshow(label_image, cmap="tab10")
-    plt.title(f"Spectral clustering with 4 clusters, sigma={sigma}")
-    plt.axis("off")
-    plt.show()
+        #run clustering
+        label_image, labels, A = spectral_clustering(
+            #image_array=img_array,
+            image_array=img_array,
+            sigma=sigma,
+            n_clusters=cluster, random_state=123
+            )
+        
+        #plotting part a, clustering results
+        #https://matplotlib.org/stable/api/_as_gen/matplotlib.pyplot.imshow.html
+        plt.figure()
+        plt.imshow(label_image)
+        plt.title(f"Spectral clustering with k = {cluster} clusters, sigma={sigma}")
+        plt.axis("off")
+        #plt.show()
+        plt.savefig(f"assignments/hw10/figures/clusters_k{cluster}_sigma{sigma}.pdf", dpi=400, bbox_inches="tight")
+        plt.close()
 
-    #part b
-    #getting the mean of all RGB values.  Need the actual RGB values
+        #part b
+        #for each cluster, compute the means of all R, G, and B values for the pixels in that cluster
+        #place that mean at all locations of the pixels in that cluster.
 
-    #initialize empty pixel map
-    mean_pixels = np.zeros_like(img_array)
+        #initialize empty pixel map
+        mean_pixels = np.zeros_like(img_array)
 
-    label_grid = labels.reshape(height, width)
-    color_image = np.zeros_like(img_array)
+        label_grid = labels.reshape(height, width)
+
+        #don't need to specify dims with zeros_like
+        color_image = np.zeros_like(img_array)
+
+        #loop over each cluster
+        for i in range(4):
+            #find all pixels in cluster i
+            indicator = (label_grid == i)
+
+            #select pixels in the original image that belong to cluster i
+            #shape should be (#pixels in cluster, 3)
+            temp = img_array[indicator]
+
+            #compute the mean R, G, and B values for the pixels in cluster i
+            mean_red = temp[:, 0].mean()
+            mean_green = temp[:, 1].mean()
+            mean_blue = temp[:, 2].mean()
+            mean_color = np.array([mean_red, mean_green, mean_blue])
+
+            #replace all pixels in cluster with the mean color
+            color_image[indicator] = mean_color
     
-    for i in range(4):
-        mask = (label_grid == i)
-        if np.any(mask):
-            color_image[mask] = img_array[mask].mean(axis=0)
-    
-    #color_image = mean_pixels.reshape(height, width, 3)
-    plt.figure()
-    plt.imshow(color_image)
-    plt.title(f"Mean-color image (Sigma={sigma})")
-    plt.axis("off")
-    plt.show()
-    
+        #plot this mean color image
+        plt.figure()
+        plt.imshow(color_image)
+        plt.title(f"Mean color image (k={cluster}, sigma={sigma})")
+        plt.axis("off")
+        #plt.show()
+        plt.savefig(f"assignments/hw10/figures/mean_k{cluster}_sigma{sigma}.pdf", dpi=400, bbox_inches="tight")
+        plt.close()
