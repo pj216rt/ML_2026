@@ -1,11 +1,9 @@
 import numpy as np
-import pandas as pd
 from scipy.sparse import diags
 from sklearn.cluster import KMeans
 import matplotlib.pyplot as plt
 from PIL import Image
 from scipy.sparse import coo_matrix
-import time
 import torch
 
 #found this for working with images
@@ -66,47 +64,45 @@ def build_affinity_matrix(img_array, sigma):
     #build the sparse affinity matrix
     A = coo_matrix((data, (rows, cols)), shape=(n_pixels, n_pixels))
 
+    #https://docs.scipy.org/doc/scipy/reference/generated/scipy.sparse.coo_matrix.tocsr.html
     return A.tocsr()
 
 #function for spectral clustering
 #build A on CPU.  Run svd_lowrank on torch
+#lot of debugging stuff in here.  Had a hard time
 def spectral_clustering(image_array, sigma, n_clusters, random_state):
 
     #image dimensions and total number of pixels
     height, width, channels = image_array.shape
-    n_pixels = height*width
 
     #set the torch device and random seed
-    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    torch.manual_seed(random_state)
+    if torch.cuda.is_available():
+        device = torch.device('cuda')
+    else:
+        device = torch.device('cpu')
 
     #build the affinity matrix
-    t0 = time.time()
     A = build_affinity_matrix(image_array, sigma)
-    t1 = time.time()
-    print(f"build A: {t1 - t0:.2f} sec")
+    #print("build A")
 
     #need the Degree matrix.  Simply the sum of the four neighbors for each pixel
     #need sparse matrix
     #https://docs.scipy.org/doc/scipy/reference/generated/scipy.sparse.diags.html
+    #flatten turns this into a simple 1D array
     D = np.array(A.sum(axis=1)).flatten()
-    print("min degree:", D.min(), "max degree:", D.max(), "num zeros:", np.sum(D == 0))
     
     #need D inverse square root
     D_inv_sqrt = diags(D**(-0.5))
 
     #feed this into svd.  Pg 27 in notes
     L = D_inv_sqrt @ A @ D_inv_sqrt
-    L = L.tocoo()
-    t2 = time.time()
-    print(f"L: {t2 - t1:.2f} sec")
 
-    #need to convert the matrix to a sparse tensor for torch.
-    #the linalg>svds just took too long and didn't converge
-    #row and column indices
-    indices = np.vstack((L.row, L.col))
-    indices = torch.from_numpy(indices).long()
-    values = torch.from_numpy(L.data).float()
+    #convert to COO format for torch
+    L_coo = L.tocoo()
+
+    indices = np.vstack((L_coo.row, L_coo.col))
+    indices = torch.from_numpy(indices).long().to(device)
+    values = torch.from_numpy(L_coo.data).float().to(device)
 
     L_tensor = torch.sparse_coo_tensor(
         indices,
@@ -120,31 +116,29 @@ def spectral_clustering(image_array, sigma, n_clusters, random_state):
     #q needs to be a "slightlyt overestimates rank of the matrix"
     #increaing niter can lead to better approximations
     U, S, Vh = torch.svd_lowrank(L_tensor, q=n_clusters+5, niter=10)
-    t3 = time.time()
-    print(f"svd_lowrank: {t3 - t2:.2f} sec") 
+    #print("svd_lowrank") 
 
     #take first n_clusters columns of U
     #each row of E is the embedding of a pixel in the n_clusters dimensional space.  We will run k-means on these
     E = U[:, :n_clusters].cpu().numpy()
-    print("E finite before norm:", np.all(np.isfinite(E)))
 
     #normalize the rows of E.  Need to avoid dividing by zero.  Ran into issues here if we didn't
     E_row_norms = np.linalg.norm(E, axis=1, keepdims=True)
-    print("min row norm:", E_row_norms.min(), "num zero row norms:", np.sum(E_row_norms <= 1e-12))
     E_row_norms = np.maximum(E_row_norms, 1e-12)
     E_normalized = E / E_row_norms
 
     #k-means
     kmeans = KMeans(n_clusters=n_clusters, random_state=random_state, n_init=10)
     labels = kmeans.fit_predict(E_normalized)
-    t4 = time.time()
-    print(f"kmeans: {t4 - t3:.2f} sec")
+    #print("kmeans")
 
     #reshape the labels back to the image dimensions for visualization
     label_image = labels.reshape(height, width)
 
-    return label_image, labels, A
+    return label_image, labels
 
+
+#actual problem
 sigmas = [0.1, 0.2, 0.05]
 clusters = [4,8]
 
@@ -156,10 +150,9 @@ for sigma in sigmas:
         
         #image dimensions and total number of pixels
         height, width, channels = img_array.shape
-        n_pixels = height*width
 
         #run clustering
-        label_image, labels, A = spectral_clustering(
+        label_image, labels = spectral_clustering(
             #image_array=img_array,
             image_array=img_array,
             sigma=sigma,
@@ -180,16 +173,14 @@ for sigma in sigmas:
         #for each cluster, compute the means of all R, G, and B values for the pixels in that cluster
         #place that mean at all locations of the pixels in that cluster.
 
-        #initialize empty pixel map
-        mean_pixels = np.zeros_like(img_array)
-
         label_grid = labels.reshape(height, width)
 
         #don't need to specify dims with zeros_like
         color_image = np.zeros_like(img_array)
 
         #loop over each cluster
-        for i in range(4):
+        for i in range(cluster):
+            print(i)
             #find all pixels in cluster i
             indicator = (label_grid == i)
 
