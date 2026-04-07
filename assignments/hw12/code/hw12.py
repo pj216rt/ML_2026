@@ -59,4 +59,97 @@ for i in range(4):
     print(f"State variable {i}: min={mins[i]}, max={maxs[i]}, num discrete values={num_vals[i]}")
 
 
-#part b.  Need to use the state space to initialze Q table.  
+
+
+N_values = [2000, 10000, 50000]
+gamma = 0.9
+
+for N in N_values:
+    print(f"\n===== N = {N} =====")
+
+    # initialize Q table
+    Q = np.zeros((num_vals[0], num_vals[1], num_vals[2], num_vals[3], 2))
+
+    for i in range(N):
+        state, info = env.reset()
+        done = False
+
+        while not done:
+            # convert state to discrete state
+            discrete_state = (state * 10).astype(int)
+            discrete_state = np.clip(discrete_state, mins, maxs)
+            s_idx = discrete_state - mins
+
+            a = random.randrange(2)
+            next_state, reward, terminated, truncated, info = env.step(a)
+            done = terminated or truncated
+
+            # convert next state to discrete state
+            disc_next = (next_state * 10).astype(int)
+            disc_next = np.clip(disc_next, mins, maxs)
+            s_next_idx = disc_next - mins
+
+            # update Q table
+            Q[s_idx[0], s_idx[1], s_idx[2], s_idx[3], a] = (
+                reward + gamma * np.max(
+                    Q[s_next_idx[0], s_next_idx[1], s_next_idx[2], s_next_idx[3]]
+                )
+            )
+
+            state = next_state
+
+    # report percent nonzero after random phase
+    percent1 = 100 * np.count_nonzero(Q) / Q.size
+    print(f"Percent non-zero after random phase: {percent1:.2f}%")
+
+    eps = []
+
+    for i in range(N):
+        state, info = env.reset()
+        done = False
+        steps = 0
+
+        while not done and steps < 2000:
+            # convert state to discrete state
+            discrete_state = (state * 10).astype(int)
+            discrete_state = np.clip(discrete_state, mins, maxs)
+            s_idx = discrete_state - mins
+
+            # choose greedy action
+            a = np.argmax(Q[s_idx[0], s_idx[1], s_idx[2], s_idx[3]])
+
+            next_state, reward, terminated, truncated, info = env.step(a)
+            done = terminated or truncated
+
+            # convert next state to discrete state
+            disc_next = (next_state * 10).astype(int)
+            disc_next = np.clip(disc_next, mins, maxs)
+            s_next_idx = disc_next - mins
+
+            # update Q table
+            Q[s_idx[0], s_idx[1], s_idx[2], s_idx[3], a] = (
+                reward + gamma * np.max(
+                    Q[s_next_idx[0], s_next_idx[1], s_next_idx[2], s_next_idx[3]]
+                )
+            )
+
+            state = next_state
+            steps += 1
+
+        eps.append(steps)
+
+    # report after greedy phase
+    percent2 = 100 * np.count_nonzero(Q) / Q.size
+    avg_last_1000 = np.mean(eps[-1000:])
+
+    print(f"Percent non-zero after greedy phase: {percent2:.2f}%")
+    print(f"Average episode length (last 1000): {avg_last_1000:.2f}")
+
+    # save plot
+    plt.figure()
+    plt.plot(eps)
+    plt.title(f"Episode Length vs Episode (N={N})")
+    plt.xlabel("Episode")
+    plt.ylabel("Length")
+    plt.savefig(f"assignments/hw12/figures/episode_length_N{N}.pdf", dpi=300, bbox_inches="tight")
+    plt.close()
