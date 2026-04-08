@@ -9,7 +9,6 @@
 \usepackage{enumitem}
 \usepackage{pdfpages}
 \usepackage{graphicx}
-\usepackage{listings}
 \usepackage{xcolor}
 \usepackage{rotating}
 \usepackage{subcaption}
@@ -80,18 +79,48 @@
 
 \end{figure}
 
+
+\begin{table}[htbp]
+\centering
 \input{../output/state_summary_part1.tex}
+\end{table}
 
+\newpage
 
-\section*{Part 2}
+\section*{Parts 2, 3, and 4}
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=0.5\textwidth]{../figures/episode_length_N2000.pdf}
+    \caption{Episode Length vs Episode (N=2000)}
+    \label{fig:episode_lengths_last_1000}
+\end{figure}
 
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=0.5\textwidth]{../figures/episode_length_N10000.pdf}
+    \caption{Episode Length vs Episode (N=10000)}
+    \label{fig:episode_lengths_last_10000}
+\end{figure}
+    
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=0.5\textwidth]{../figures/episode_length_N50000.pdf}
+    \caption{Episode Length vs Episode (N=50000)}
+    \label{fig:episode_lengths_last_50000}
+\end{figure}
 
+\newpage
 
-% \newpage
-% \newpage
-% %adding code
-% \appendix
-% \section*{Code}
-% \lstinputlisting[language=Python]{../code/hw10.py}
+\begin{table}[htbp]
+\centering
+\input{../output/results_summary.tex}
+\end{table}
+
+\newpage
+\newpage
+%adding code
+\appendix
+\section*{Code}
+\lstinputlisting[language=Python]{../code/hw12.py}
 
 \end{document}

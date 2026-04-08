@@ -85,18 +85,20 @@ with open("assignments/hw12/output/state_summary_part1.tex", "w") as f:
 N_values = [2000, 10000, 50000]
 gamma = 0.9
 
+results = []
+
 for N in N_values:
     print(f"\n===== N = {N} =====")
 
     #initialize Q table
     Q = np.zeros((num_vals[0], num_vals[1], num_vals[2], num_vals[3], 2))
 
-    for i in range(2000):
+    for i in range(N):
         state, info = env.reset()
         done = False
 
         while not done:
-            #convert state to discrete state
+            #convert state to discrete state and clip to the min and max values
             discrete_state = (state * 10).astype(int)
             discrete_state = np.clip(discrete_state, mins, maxs)
             s_idx = discrete_state - mins
@@ -106,7 +108,7 @@ for N in N_values:
             next_state, reward, terminated, truncated, info = env.step(a)
             done = terminated or truncated
 
-            #convert next state to discrete state
+            #convert next state to discrete state and clip to the min and max values
             disc_next = (next_state * 10).astype(int)
             disc_next = np.clip(disc_next, mins, maxs)
             s_next_idx = disc_next - mins
@@ -122,7 +124,7 @@ for N in N_values:
 
     #report percent nonzero after random phase
     percent1 = 100 * np.count_nonzero(Q) / Q.size
-    print(f"Percent non-zero after random phase: {percent1:.2f}%")
+    print(f"Percent non-zero in Q-table with random actions: {percent1:.2f}%")
 
     eps = []
 
@@ -131,6 +133,7 @@ for N in N_values:
         done = False
         steps = 0
 
+        #stop any episode with more than 2000 steps
         while not done and steps < 2000:
             #convert state to discrete state
             discrete_state = (state * 10).astype(int)
@@ -154,23 +157,45 @@ for N in N_values:
                 )
             )
 
+            #set state to next state and increment steps
             state = next_state
             steps += 1
 
+        #memorize episode length
         eps.append(steps)
 
-    # report after greedy phase
+    #report percent non zero after max action phase
     percent2 = 100 * np.count_nonzero(Q) / Q.size
     avg_last_1000 = np.mean(eps[-1000:])
 
-    print(f"Percent non-zero after greedy phase: {percent2:.2f}%")
-    print(f"Average episode length (last 1000): {avg_last_1000:.2f}")
+    print(f"Percent non-zero in Q-table after max value action: {percent2:.2f}%")
+    print(f"Average episode length (last 1000 episodes): {avg_last_1000:.2f}")
+
+    #save objects we need to report in a table
+    results.append({
+        "N": N,
+        "% Nonzero (Random)": percent1,
+        "% Nonzero (Max)": percent2,
+        "Avg Ep. Length (Last 1000)": avg_last_1000
+    })
 
     # save plot
     plt.figure()
-    plt.plot(eps)
+    plt.plot(eps, linewidth=0.3)
     plt.title(f"Episode Length vs Episode (N={N})")
     plt.xlabel("Episode")
     plt.ylabel("Length")
     plt.savefig(f"assignments/hw12/figures/episode_length_N{N}.pdf", dpi=300, bbox_inches="tight")
     plt.close()
+
+#convert results to df and export
+results_df = pd.DataFrame(results)
+
+latex_table = results_df.to_latex(
+    index=False,
+    escape=True,
+    float_format="%.3f"
+)
+
+with open("assignments/hw12/output/results_summary.tex", "w") as f:
+    f.write(latex_table)
