@@ -36,6 +36,7 @@ env.close()
 states = (np.array(states)*10).astype(int)
 
 #plot histograms and save
+#usig 50 bins for each state variable, and save as pdfs in the figures folder
 for i in range(4):
     plt.figure()
     plt.hist(states[:, i], bins=50)
@@ -56,13 +57,23 @@ num_vals = maxs - mins + 1
 num_total_states = np.prod(num_vals)
 print(f"Total number of discrete states: {num_total_states}")
 
-#need to export to LATEX
+#build dataframe
 df = pd.DataFrame({
     "State Variable": [0, 1, 2, 3],
     "Min": mins,
     "Max": maxs,
     "Num Discrete Values": num_vals
 })
+
+#add a total row
+total_row = pd.DataFrame({
+    "State Variable": ["Total"],
+    "Min": [""],
+    "Max": [""],
+    "Num Discrete Values": [num_total_states]
+})
+
+df = pd.concat([df, total_row], ignore_index=True)
 
 latex_table = df.to_latex(index=False)
 
@@ -80,7 +91,7 @@ for N in N_values:
     #initialize Q table
     Q = np.zeros((num_vals[0], num_vals[1], num_vals[2], num_vals[3], 2))
 
-    for i in range(N):
+    for i in range(2000):
         state, info = env.reset()
         done = False
 
@@ -90,6 +101,7 @@ for N in N_values:
             discrete_state = np.clip(discrete_state, mins, maxs)
             s_idx = discrete_state - mins
 
+            #take random action
             a = random.randrange(2)
             next_state, reward, terminated, truncated, info = env.step(a)
             done = terminated or truncated
