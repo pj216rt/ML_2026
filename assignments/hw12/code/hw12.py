@@ -4,6 +4,12 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import random
 
+#https://gymnasium.farama.org/introduction/basic_usage/
+#I think the first three states are position, velocity, and angle.  
+#not sure what the fourth state is
+
+#https://gymnasium.farama.org/environments/classic_control/cart_pole/
+#ah.  fourth is angular velocity.
 #need to create a cartpole environment
 env = gym.make("CartPole-v1")
 
@@ -14,17 +20,21 @@ states = []
 #part a 
 #loop over and collect the states of 1000 episodes
 for i in range(n_episodes):
-    state, info = env.reset()
 
+    #reset enviro at the start of each episode
+    state, info = env.reset()
     done = False
 
+    #run this until done
     while not done:
         #append to the states list
         states.append(state)
 
+        #take a random action (0 or 1)  and observe the next state and reward
         a = random.randrange(2)
         observation, reward, terminated, truncated, info = env.step(a)
         
+        #epsiode ends if one of these is true
         done = terminated or truncated
 
         #update state
@@ -75,12 +85,15 @@ total_row = pd.DataFrame({
 
 df = pd.concat([df, total_row], ignore_index=True)
 
+#export table as latex
 latex_table = df.to_latex(index=False)
 
 with open("assignments/hw12/output/state_summary_part1.tex", "w") as f:
     f.write(latex_table)
 
 
+
+#parts 2, 3, and 4
 #loop over these
 N_values = [2000, 10000, 50000]
 gamma = 0.9
@@ -124,7 +137,6 @@ for N in N_values:
 
     #report percent nonzero after random phase
     percent1 = 100 * np.count_nonzero(Q) / Q.size
-    print(f"Percent non-zero in Q-table with random actions: {percent1:.2f}%")
 
     eps = []
 
@@ -168,9 +180,6 @@ for N in N_values:
     percent2 = 100 * np.count_nonzero(Q) / Q.size
     avg_last_1000 = np.mean(eps[-1000:])
 
-    print(f"Percent non-zero in Q-table after max value action: {percent2:.2f}%")
-    print(f"Average episode length (last 1000 episodes): {avg_last_1000:.2f}")
-
     #save objects we need to report in a table
     results.append({
         "N": N,
@@ -191,11 +200,13 @@ for N in N_values:
 #convert results to df and export
 results_df = pd.DataFrame(results)
 
+#need escapce for the % signs
 latex_table = results_df.to_latex(
     index=False,
     escape=True,
     float_format="%.3f"
 )
 
+#save latex table
 with open("assignments/hw12/output/results_summary.tex", "w") as f:
     f.write(latex_table)
