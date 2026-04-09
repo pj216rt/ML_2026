@@ -65,7 +65,7 @@ num_vals = maxs - mins + 1
 
 #get total number of discrete states
 num_total_states = np.prod(num_vals)
-print(f"Total number of discrete states: {num_total_states}")
+#print(f"Total number of discrete states: {num_total_states}")
 
 #build dataframe
 df = pd.DataFrame({
@@ -101,7 +101,7 @@ gamma = 0.9
 results = []
 
 for N in N_values:
-    print(f"\n===== N = {N} =====")
+    print(f"\nN = {N}")
 
     #initialize Q table
     Q = np.zeros((num_vals[0], num_vals[1], num_vals[2], num_vals[3], 2))
@@ -112,7 +112,7 @@ for N in N_values:
 
         while not done:
             #convert state to discrete state and clip to the min and max values
-            discrete_state = (state * 10).astype(int)
+            discrete_state = (state*10).astype(int)
             discrete_state = np.clip(discrete_state, mins, maxs)
             s_idx = discrete_state - mins
 
@@ -135,9 +135,10 @@ for N in N_values:
 
             state = next_state
 
-    #report percent nonzero after random phase
+    #percent nonzero after random phase
     percent1 = 100 * np.count_nonzero(Q) / Q.size
 
+    #ready to store episode lengths (last 1000)
     eps = []
 
     for i in range(N):
@@ -148,7 +149,7 @@ for N in N_values:
         #stop any episode with more than 2000 steps
         while not done and steps < 2000:
             #convert state to discrete state
-            discrete_state = (state * 10).astype(int)
+            discrete_state = (state*10).astype(int)
             discrete_state = np.clip(discrete_state, mins, maxs)
             s_idx = discrete_state - mins
 
@@ -162,7 +163,7 @@ for N in N_values:
             disc_next = np.clip(disc_next, mins, maxs)
             s_next_idx = disc_next - mins
 
-            #update Q table
+            #update Q table.  Basically the same as before but we use max
             Q[s_idx[0], s_idx[1], s_idx[2], s_idx[3], a] = (
                 reward + gamma * np.max(
                     Q[s_next_idx[0], s_next_idx[1], s_next_idx[2], s_next_idx[3]]
@@ -176,7 +177,7 @@ for N in N_values:
         #memorize episode length
         eps.append(steps)
 
-    #report percent non zero after max action phase
+    #percent non zero after max action phase
     percent2 = 100 * np.count_nonzero(Q) / Q.size
     avg_last_1000 = np.mean(eps[-1000:])
 
@@ -188,7 +189,7 @@ for N in N_values:
         "Avg Ep. Length (Last 1000)": avg_last_1000
     })
 
-    # save plot
+    #save plot, thin the linewidth (I thought it looked better)
     plt.figure()
     plt.plot(eps, linewidth=0.3)
     plt.title(f"Episode Length vs Episode (N={N})")
