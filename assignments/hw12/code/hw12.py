@@ -133,6 +133,7 @@ for N in N_values:
                 )
             )
 
+            #advance
             state = next_state
 
     #percent nonzero after random phase
