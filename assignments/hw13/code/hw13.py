@@ -1,7 +1,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
 from PIL import Image
-
+import pandas as pd
 
 #need to load image and convert to array
 image = Image.open("assignments/hw13/data/gw.bmp")
@@ -14,13 +14,14 @@ column_minimums = np.min(img_array, axis=0)
 image_norm = img_array - column_minimums
 
 #display the normalized image
-plt.figure()
+plt.figure(figsize=(8, 4))
 plt.imshow(image_norm, cmap="gray")
 plt.title("Normalized guidewire image")
 plt.tight_layout()
 plt.axis("off")
 plt.savefig("assignments/hw13/figures/normalized_image.pdf", dpi=400, bbox_inches="tight")
 #plt.show()
+plt.close()
 
 #need a plot with a curve through the minima
 #need to the get the locations of the minimum values from each column
@@ -28,7 +29,7 @@ min_locations = np.argmin(img_array, axis=0)
 cols = np.arange(img_array.shape[1])
 rows = min_locations
 
-plt.figure()
+plt.figure(figsize=(8, 4))
 plt.imshow(image_norm, cmap="gray")
 plt.plot(cols, rows, color="red")
 plt.title("Normalized guidewire image with minimum-value location curve")
@@ -49,7 +50,7 @@ rows, columns = image_norm.shape
 states = np.arange(rows)
 
 #I(i,j) is the pixel intensity at row i and column j of the image
-#Viterbi algorithm, similar to Dynamic programming
+#Viterbi algorithm, similar to what we did in the HMM homework
 #difference is we are trying to minimize, whereas Viterbi is a maximization problem
 #https://en.wikipedia.org/wiki/Viterbi_algorithm#Pseudocode
 for alpha in alphas:
@@ -81,23 +82,35 @@ for alpha in alphas:
     for t in range(columns - 2, -1, -1):
         path[t] = prev[t + 1, path[t + 1]]
 
-    # minimum value of the objective
+    #minimum value
     f_min = prob[columns - 1, path[columns - 1]]
 
-    # store results
+    #store results
     results[alpha] = {
         "f_min": f_min,
         "curve": path
     }
 
-print("Minimum value for alpha = 2:", results[2]["f_min"])
-print("Minimum value for alpha = 15:", results[15]["f_min"])
+#create dataframe to save reporting to
+df = pd.DataFrame({
+    "alpha": [2, 15],
+    "f_min": [results[2]["f_min"], results[15]["f_min"]]
+})
+df.columns = [r"$\alpha$", r"Minimum $f(c)$"]
+
+#save table to latex
+df.to_latex(
+    "assignments/hw13/output/results_table.tex",
+    index=False,
+    float_format="%.4f",
+    escape=False
+)
 
 #plotting is pretty easy now
 colors = {2: "red", 15: "blue"}
 
 for alpha in [2, 15]:
-    plt.figure()
+    plt.figure(figsize=(8, 4))
     plt.imshow(image_norm, cmap="gray")
     plt.plot(np.arange(image_norm.shape[1]), results[alpha]["curve"], color=colors[alpha], linewidth=2)
     plt.title(fr"Normalized image with optimal curve, $\alpha = {alpha}$")
